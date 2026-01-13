@@ -36,7 +36,7 @@ namespace Project_MyShop_2025.Views
                         ContentFrame.Navigate(typeof(ProductsPage));
                         break;
                     case "Orders":
-                        // TODO: Navigate to Orders page
+                        ContentFrame.Navigate(typeof(OrdersPage));
                         break;
                     case "Reports":
                         // TODO: Navigate to Reports page

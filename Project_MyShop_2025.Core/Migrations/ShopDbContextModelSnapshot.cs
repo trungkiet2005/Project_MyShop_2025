@@ -70,6 +70,9 @@ namespace Project_MyShop_2025.Core.Migrations
                     b.Property<string>("CustomerPhone")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("TotalPrice")
                         .HasColumnType("INTEGER");
 
