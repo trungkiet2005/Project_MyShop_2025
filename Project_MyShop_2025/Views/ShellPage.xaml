@@ -8,27 +8,89 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
    
-    <NavigationView x:Name="NavView"
-                    IsBackButtonVisible="Collapsed"
-                    IsSettingsVisible="True"
-                    PaneDisplayMode="Left"
-                    IsPaneToggleButtonVisible="True"
-                    SelectionChanged="NavView_SelectionChanged">
-        
-        <NavigationView.MenuItems>
-            <NavigationViewItem Content="Dashboard" Tag="Dashboard" Icon="Home"/>
-            <NavigationViewItem Content="Products" Tag="Products" Icon="Shop"/>
-            <NavigationViewItem Content="Orders" Tag="Orders" Icon="List"/>
-            <NavigationViewItem Content="Reports" Tag="Reports" Icon="Document"/>
-        </NavigationView.MenuItems>
+    <Grid>
+        <NavigationView x:Name="NavView"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="False"
+                        PaneDisplayMode="Left"
+                        IsPaneToggleButtonVisible="True"
+                        SelectionChanged="NavView_SelectionChanged">
+            
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Dashboard" Tag="Dashboard" Icon="Home"/>
+                <NavigationViewItem Content="Products" Tag="Products" Icon="Shop"/>
+                <NavigationViewItem Content="Orders" Tag="Orders" Icon="List"/>
+                <NavigationViewItem Content="Reports" Tag="Reports" Icon="Document"/>
+            </NavigationView.MenuItems>
 
-        <NavigationView.PaneFooter>
-            <StackPanel Spacing="5" Padding="10">
-                <Button Content="Logout" Click="Logout_Click" HorizontalAlignment="Stretch"/>
-                <TextBlock x:Name="UserNameText" Text="Welcome, User" FontSize="12" Foreground="Gray" HorizontalAlignment="Center"/>
-            </StackPanel>
-        </NavigationView.PaneFooter>
+            <NavigationView.PaneFooter>
+                <StackPanel Spacing="5" Padding="10">
+                    <Button Content="Logout" Click="Logout_Click" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+            </NavigationView.PaneFooter>
 
-        <Frame x:Name="ContentFrame"/>
-    </NavigationView>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header with Search and User Profile -->
+                <Border Grid.Row="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="24,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Global Search Bar -->
+                        <AutoSuggestBox x:Name="GlobalSearchBox"
+                                       Grid.Column="0"
+                                       PlaceholderText="Search orders, customers, products..."
+                                       QueryIcon="Find"
+                                       Width="500"
+                                       HorizontalAlignment="Left"
+                                       QuerySubmitted="GlobalSearchBox_QuerySubmitted"
+                                       TextChanged="GlobalSearchBox_TextChanged"
+                                       Margin="0,0,24,0"/>
+
+                        <!-- User Profile Section -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <Button x:Name="UserProfileButton" 
+                                    Click="UserProfileButton_Click"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Padding="8,4">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="#2196F3">
+                                        <TextBlock x:Name="UserInitialText" 
+                                                   Text="A" 
+                                                   FontSize="16" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock x:Name="UserNameText" 
+                                                   Text="Welcome, User" 
+                                                   FontSize="14" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#1A1A1A"/>
+                                        <TextBlock Text="Administrator" 
+                                                   FontSize="11" 
+                                                   Foreground="#666666"/>
+                                    </StackPanel>
+                                    <FontIcon Glyph="&#xE70D;" FontSize="16" Foreground="#666666"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Content Frame -->
+                <Frame x:Name="ContentFrame" Grid.Row="1"/>
+            </Grid>
+        </NavigationView>
+    </Grid>
 </Page>

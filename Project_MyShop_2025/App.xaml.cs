@@ -53,9 +53,19 @@ namespace Project_MyShop_2025
                 var exeDirectory = System.IO.Path.GetDirectoryName(exePath);
                 
                 // Database sẽ được lưu trong cùng thư mục với .exe
-                var dbPath = System.IO.Path.Combine(exeDirectory, "myshop.db");
-                Project_MyShop_2025.Core.Data.DatabasePathHelper.SetDatabasePath(dbPath);
-                System.Diagnostics.Debug.WriteLine($"Database path set to: {dbPath}");
+                if (!string.IsNullOrEmpty(exeDirectory))
+                {
+                    var dbPath = System.IO.Path.Combine(exeDirectory, "myshop.db");
+                    Project_MyShop_2025.Core.Data.DatabasePathHelper.SetDatabasePath(dbPath);
+                    System.Diagnostics.Debug.WriteLine($"Database path set to: {dbPath}");
+                }
+                else
+                {
+                    // Fallback to BaseDirectory if exeDirectory is null
+                    var dbPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "myshop.db");
+                    Project_MyShop_2025.Core.Data.DatabasePathHelper.SetDatabasePath(dbPath);
+                    System.Diagnostics.Debug.WriteLine($"Database path set to (fallback): {dbPath}");
+                }
             }
             catch (Exception ex)
             {

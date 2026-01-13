@@ -7,7 +7,18 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="#F8F9FA">
+    Background="#F3F4F6">
+
+    <Page.Resources>
+        <!-- Shadow effect for cards -->
+        <Style x:Key="CardShadow" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderBrush" Value="#E0E0E0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="20"/>
+        </Style>
+    </Page.Resources>
 
     <ScrollViewer>
         <Grid Padding="24">
@@ -17,25 +28,35 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Header -->
+            <!-- Header with Breadcrumbs -->
             <StackPanel Grid.Row="0" Margin="0,0,0,24">
                 <TextBlock Text="Dashboard" FontSize="32" FontWeight="Bold" Foreground="#1A1A1A"/>
                 <TextBlock Text="Sales Management Overview" FontSize="14" Foreground="#666666" Margin="0,4,0,0"/>
             </StackPanel>
 
-            <!-- KPI Cards -->
+            <!-- KPI Cards with Enhanced Features -->
             <Grid Grid.Row="1" Margin="0,0,0,24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Total Products -->
-                <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="#E0E0E0" BorderThickness="1">
-                    <StackPanel Spacing="12">
-                        <Grid>
+                <Border Grid.Column="0" Style="{StaticResource CardShadow}" Margin="0,0,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header with Action Menu -->
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -43,15 +64,29 @@
                             <TextBlock Text="Total Products" FontSize="13" Foreground="#666666"/>
                             <FontIcon Grid.Column="1" Glyph="&#xE8F1;" FontSize="20" Foreground="#2196F3"/>
                         </Grid>
-                        <TextBlock x:Name="TotalProductsText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
-                        <TextBlock Text="In catalog" FontSize="11" Foreground="#999999"/>
-                    </StackPanel>
+                        
+                        <!-- Main Content -->
+                        <StackPanel Grid.Row="1" Spacing="8">
+                            <TextBlock x:Name="TotalProductsText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
+                            <TextBlock x:Name="TotalProductsSubText" Text="In catalog" FontSize="11" Foreground="#999999"/>
+                            <TextBlock x:Name="TotalProductsChangeText" Text="+0% vs last month" FontSize="11" Foreground="#4CAF50" Visibility="Collapsed"/>
+                        </StackPanel>
+                        
+                        <!-- Sparkline Chart -->
+                        <Canvas Grid.Row="2" x:Name="TotalProductsSparkline" Height="30" Margin="0,8,0,0" Opacity="0.3"/>
+                    </Grid>
                 </Border>
 
                 <!-- Today's Revenue -->
-                <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="#E0E0E0" BorderThickness="1">
-                    <StackPanel Spacing="12">
-                        <Grid>
+                <Border Grid.Column="2" Style="{StaticResource CardShadow}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -59,15 +94,30 @@
                             <TextBlock Text="Today's Revenue" FontSize="13" Foreground="#666666"/>
                             <FontIcon Grid.Column="1" Glyph="&#xE8EC;" FontSize="20" Foreground="#4CAF50"/>
                         </Grid>
-                        <TextBlock x:Name="TodayRevenueText" Text="₫0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
-                        <TextBlock x:Name="TodayRevenueSubText" Text="+0 from yesterday" FontSize="11" Foreground="#4CAF50"/>
-                    </StackPanel>
+                        
+                        <StackPanel Grid.Row="1" Spacing="8">
+                            <TextBlock x:Name="TodayRevenueText" Text="₫0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
+                            <TextBlock x:Name="TodayRevenueSubText" Text="+0 from yesterday" FontSize="11" Foreground="#4CAF50"/>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock x:Name="TodayRevenueChangeText" Text="⬆ 0%" FontSize="11" Foreground="#4CAF50"/>
+                                <TextBlock Text="vs yesterday" FontSize="11" Foreground="#999999"/>
+                            </StackPanel>
+                        </StackPanel>
+                        
+                        <Canvas Grid.Row="2" x:Name="TodayRevenueSparkline" Height="30" Margin="0,8,0,0" Opacity="0.3"/>
+                    </Grid>
                 </Border>
 
                 <!-- Orders Today -->
-                <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="#E0E0E0" BorderThickness="1">
-                    <StackPanel Spacing="12">
-                        <Grid>
+                <Border Grid.Column="4" Style="{StaticResource CardShadow}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -75,25 +125,51 @@
                             <TextBlock Text="Orders Today" FontSize="13" Foreground="#666666"/>
                             <FontIcon Grid.Column="1" Glyph="&#xE7BF;" FontSize="20" Foreground="#FF9800"/>
                         </Grid>
-                        <TextBlock x:Name="TodayOrdersText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
-                        <TextBlock Text="New orders" FontSize="11" Foreground="#999999"/>
-                    </StackPanel>
+                        
+                        <StackPanel Grid.Row="1" Spacing="8">
+                            <TextBlock x:Name="TodayOrdersText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
+                            <TextBlock Text="New orders" FontSize="11" Foreground="#999999"/>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock x:Name="TodayOrdersChangeText" Text="⬆ 0%" FontSize="11" Foreground="#4CAF50"/>
+                                <TextBlock Text="vs yesterday" FontSize="11" Foreground="#999999"/>
+                            </StackPanel>
+                        </StackPanel>
+                        
+                        <Canvas Grid.Row="2" x:Name="TodayOrdersSparkline" Height="30" Margin="0,8,0,0" Opacity="0.3"/>
+                    </Grid>
                 </Border>
 
                 <!-- Low Stock Alert -->
-                <Border Grid.Column="3" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
-                    <StackPanel Spacing="12">
-                        <Grid>
+                <Border Grid.Column="6" Style="{StaticResource CardShadow}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Low Stock Alert" FontSize="13" Foreground="#666666"/>
-                            <FontIcon Grid.Column="1" Glyph="&#xE7BA;" FontSize="20" Foreground="#F44336"/>
+                            <Button x:Name="LowStockActionButton"
+                                    Grid.Column="1" 
+                                    Background="Transparent" 
+                                    BorderThickness="0" 
+                                    Padding="4"
+                                    Click="LowStockAction_Click"
+                                    ToolTipService.ToolTip="Quick actions">
+                                <FontIcon Glyph="&#xE712;" FontSize="16" Foreground="#666666"/>
+                            </Button>
                         </Grid>
-                        <TextBlock x:Name="LowStockText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
-                        <TextBlock Text="Items below 5 units" FontSize="11" Foreground="#F44336"/>
-                    </StackPanel>
+                        
+                        <StackPanel Grid.Row="1" Spacing="8">
+                            <TextBlock x:Name="LowStockText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
+                            <TextBlock Text="Items below 5 units" FontSize="11" Foreground="#F44336"/>
+                        </StackPanel>
+                    </Grid>
                 </Border>
             </Grid>
 
@@ -114,7 +190,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Low Stock Products -->
-                    <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <Border Grid.Column="0" Style="{StaticResource CardShadow}" Padding="24">
                         <StackPanel Spacing="16">
                             <StackPanel Spacing="4">
                                 <TextBlock Text="⚠️ Low Stock Products" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
@@ -146,8 +222,8 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Best Sellers -->
-                    <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <!-- Best Sellers with Thumbnails and Progress -->
+                    <Border Grid.Column="2" Style="{StaticResource CardShadow}" Padding="24">
                         <StackPanel Spacing="16">
                             <StackPanel Spacing="4">
                                 <TextBlock Text="🔥 Best Selling Products" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
@@ -158,15 +234,35 @@
                                     <DataTemplate>
                                         <Grid Padding="8,12" Background="Transparent">
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="48"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding ProductName}" VerticalAlignment="Center" FontWeight="Medium" Foreground="#1A1A1A"/>
-                                            <Border Grid.Column="1" Background="#E8F5E9" CornerRadius="6" Padding="12,6">
+                                            
+                                            <!-- Product Thumbnail -->
+                                            <Border Grid.Column="0" Width="40" Height="40" CornerRadius="8" Background="#F5F5F5">
+                                                <Image Source="{Binding Image}" Stretch="UniformToFill"/>
+                                            </Border>
+                                            
+                                            <!-- Product Info with Progress -->
+                                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="4">
+                                                <TextBlock Text="{Binding ProductName}" FontWeight="Medium" Foreground="#1A1A1A"/>
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="{Binding TotalSold}" Foreground="#2E7D32" FontWeight="SemiBold" FontSize="13"/>
-                                                    <TextBlock Text="sold" Foreground="#2E7D32" FontSize="11" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding TotalSold}" Foreground="#2E7D32" FontWeight="SemiBold" FontSize="12"/>
+                                                    <TextBlock Text="sold" Foreground="#666666" FontSize="11" VerticalAlignment="Center"/>
                                                 </StackPanel>
+                                                <!-- Progress Bar -->
+                                                <ProgressBar Value="{Binding ProgressPercentage}" 
+                                                           Maximum="100" 
+                                                           Height="4" 
+                                                           Foreground="#4CAF50"
+                                                           Background="#E0E0E0"
+                                                           Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <!-- Badge -->
+                                            <Border Grid.Column="2" Background="#E8F5E9" CornerRadius="6" Padding="12,6" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding TotalSold}" Foreground="#2E7D32" FontWeight="SemiBold" FontSize="13"/>
                                             </Border>
                                         </Grid>
                                     </DataTemplate>
@@ -176,24 +272,53 @@
                     </Border>
                 </Grid>
 
-                <!-- Row 2: Revenue Chart -->
-                <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,24">
+                <!-- Row 2: Revenue Chart with Date Picker -->
+                <Border Grid.Row="1" Style="{StaticResource CardShadow}" Padding="24" Margin="0,0,0,24">
                     <StackPanel Spacing="20">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="📈 Revenue Trends" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
-                            <TextBlock Text="Daily revenue for current month" FontSize="12" Foreground="#999999"/>
-                        </StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="4">
+                                <TextBlock Text="📈 Revenue Trends" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
+                                <TextBlock x:Name="ChartSubtitleText" Text="Daily revenue for current month" FontSize="12" Foreground="#999999"/>
+                            </StackPanel>
+                            
+                            <!-- Date Range Picker -->
+                            <ComboBox x:Name="ChartDateRangeCombo" 
+                                     Grid.Column="1"
+                                     Width="180"
+                                     SelectionChanged="ChartDateRangeCombo_SelectionChanged"
+                                     HorizontalAlignment="Right">
+                                <ComboBoxItem Content="7 days" Tag="7" IsSelected="False"/>
+                                <ComboBoxItem Content="This month" Tag="month" IsSelected="True"/>
+                                <ComboBoxItem Content="This year" Tag="year" IsSelected="False"/>
+                                <ComboBoxItem Content="Last 30 days" Tag="30" IsSelected="False"/>
+                            </ComboBox>
+                        </Grid>
                         
-                        <Grid Height="280" Margin="0,8,0,0">
+                        <Grid Height="320" Margin="0,8,0,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             
-                            <Border Grid.Row="0" Background="#FAFAFA" CornerRadius="8">
-                                <Canvas x:Name="RevenueChart"/>
+                            <!-- Chart Container with Grid Lines -->
+                            <Border Grid.Row="0" Background="#FAFAFA" CornerRadius="8" Padding="20,10">
+                                <Grid>
+                                    <!-- Grid Lines -->
+                                    <Canvas x:Name="ChartGridLines" Opacity="0.2"/>
+                                    
+                                    <!-- Chart Content -->
+                                    <Canvas x:Name="RevenueChart"/>
+                                    
+                                    <!-- Y-Axis Labels -->
+                                    <StackPanel x:Name="YAxisLabels" Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Stretch" Margin="0,10,0,20"/>
+                                </Grid>
                             </Border>
                             
+                            <!-- X-Axis Labels -->
                             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">
                                 <StackPanel x:Name="ChartLabels" Orientation="Horizontal"/>
                             </ScrollViewer>
@@ -205,14 +330,14 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Row 3: Recent Orders -->
-                <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
+                <!-- Row 3: Recent Orders with Status Badges -->
+                <Border Grid.Row="2" Style="{StaticResource CardShadow}" Padding="24">
                     <StackPanel Spacing="16">
                         <StackPanel Spacing="4">
                             <TextBlock Text="📋 Recent Orders" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
-                            <TextBlock Text="Last 3 orders" FontSize="12" Foreground="#999999"/>
+                            <TextBlock Text="Last 5 orders" FontSize="12" Foreground="#999999"/>
                         </StackPanel>
-                        <ListView x:Name="RecentOrdersList" MaxHeight="280" SelectionMode="None">
+                        <ListView x:Name="RecentOrdersList" MaxHeight="320" SelectionMode="None">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Padding="12,16" Background="Transparent">
@@ -220,14 +345,52 @@
                                             <ColumnDefinition Width="100"/>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="140"/>
+                                            <ColumnDefinition Width="120"/>
                                             <ColumnDefinition Width="160"/>
                                         </Grid.ColumnDefinitions>
+                                        
+                                        <!-- Order ID -->
                                         <Border Grid.Column="0" Background="#F5F5F5" CornerRadius="6" Padding="10,6" HorizontalAlignment="Left">
                                             <TextBlock Text="{Binding Id}" FontWeight="SemiBold" Foreground="#1A1A1A" FontSize="13"/>
                                         </Border>
-                                        <TextBlock Grid.Column="1" Text="{Binding CustomerName}" VerticalAlignment="Center" Foreground="#1A1A1A" Margin="12,0,0,0"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding CreatedAt}" Foreground="#999999" VerticalAlignment="Center" FontSize="12"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding TotalPrice}" FontWeight="SemiBold" Foreground="#2196F3" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="15"/>
+                                        
+                                        <!-- Customer Name -->
+                                        <TextBlock Grid.Column="1" 
+                                                  Text="{Binding CustomerName}" 
+                                                  VerticalAlignment="Center" 
+                                                  Foreground="#1A1A1A" 
+                                                  Margin="12,0,0,0"
+                                                  FontWeight="Medium"/>
+                                        
+                                        <!-- Date -->
+                                        <TextBlock Grid.Column="2" 
+                                                  Text="{Binding CreatedAt}" 
+                                                  Foreground="#999999" 
+                                                  VerticalAlignment="Center" 
+                                                  FontSize="12"/>
+                                        
+                                        <!-- Status Badge -->
+                                        <Border Grid.Column="3" 
+                                               Background="{Binding StatusBackground}" 
+                                               CornerRadius="12" 
+                                               Padding="10,6" 
+                                               HorizontalAlignment="Left"
+                                               VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding StatusText}" 
+                                                      Foreground="{Binding StatusForeground}" 
+                                                      FontWeight="SemiBold" 
+                                                      FontSize="11"
+                                                      HorizontalAlignment="Center"/>
+                                        </Border>
+                                        
+                                        <!-- Total Price -->
+                                        <TextBlock Grid.Column="4" 
+                                                  Text="{Binding TotalPrice}" 
+                                                  FontWeight="SemiBold" 
+                                                  Foreground="#2196F3" 
+                                                  HorizontalAlignment="Right" 
+                                                  VerticalAlignment="Center" 
+                                                  FontSize="15"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
