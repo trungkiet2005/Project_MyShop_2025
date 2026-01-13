@@ -10,6 +10,7 @@ namespace Project_MyShop_2025.Core.Data
             var optionsBuilder = new DbContextOptionsBuilder<ShopDbContext>();
             optionsBuilder.UseSqlite("Data Source=myshop.db");
 
+
             return new ShopDbContext(optionsBuilder.Options);
         }
     }

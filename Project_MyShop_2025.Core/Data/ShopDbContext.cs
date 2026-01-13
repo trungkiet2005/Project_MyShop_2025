@@ -20,7 +20,7 @@ namespace Project_MyShop_2025.Core.Data
         {
             base.OnModelCreating(modelBuilder);
             
-            // Additional configuration if needed
+            // Additional configuration if needed - 
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Electronics" },
                 new Category { Id = 2, Name = "Books" },
