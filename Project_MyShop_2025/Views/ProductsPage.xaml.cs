@@ -6,7 +6,9 @@ using Project_MyShop_2025.Core.Data;
 using Project_MyShop_2025.Core.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -166,21 +168,130 @@ namespace Project_MyShop_2025.Views
 
         private void DisplayProducts(List<Product> products)
         {
-            var displayProducts = products.Select(p => new ProductDisplayModel
+            var displayProducts = products.Select(p => 
             {
-                Id = p.Id,
-                Name = p.Name,
-                SKU = p.SKU ?? "N/A",
-                Description = p.Description,
-                Price = p.Price,
-                PriceFormatted = $"₫{p.Price:N0}",
-                Quantity = p.Quantity,
-                Image = p.ProductImages.OrderBy(img => img.DisplayOrder).FirstOrDefault()?.ImagePath ?? p.Image ?? "/Assets/placeholder.png",
-                StockText = p.Quantity < 5 ? $"{p.Quantity} left" : $"{p.Quantity} in stock",
-                StockColor = p.Quantity < 5 ? "#F44336" : "#4CAF50"
+                var imagePath = p.ProductImages.OrderBy(img => img.DisplayOrder).FirstOrDefault()?.ImagePath ?? p.Image ?? "/Assets/placeholder.png";
+                return new ProductDisplayModel
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    SKU = p.SKU ?? "N/A",
+                    Description = p.Description,
+                    Price = p.Price,
+                    PriceFormatted = $"₫{p.Price:N0}",
+                    Quantity = p.Quantity,
+                    Image = imagePath,
+                    StockText = p.Quantity < 5 ? $"{p.Quantity} left" : $"{p.Quantity} in stock",
+                    StockColor = p.Quantity < 5 ? "#F44336" : "#4CAF50"
+                };
             }).ToList();
 
             ProductsGridView.ItemsSource = displayProducts;
+            
+            // Load ảnh async sau khi set ItemsSource
+            _ = LoadImagesForProductsAsync(displayProducts);
+        }
+
+        private async Task LoadImagesForProductsAsync(List<ProductDisplayModel> products)
+        {
+            foreach (var product in products)
+            {
+                try
+                {
+                    product.ImageSource = await GetImageSourceAsync(product.Image);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error loading image for product {product.Name}: {ex.Message}");
+                }
+            }
+        }
+
+        private async Task<Microsoft.UI.Xaml.Media.ImageSource?> GetImageSourceAsync(string imagePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(imagePath))
+                {
+                    System.Diagnostics.Debug.WriteLine("GetImageSourceAsync: imagePath is null or empty");
+                    return null;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Loading image from '{imagePath}'");
+
+                // Nếu là URL (http/https), load trực tiếp
+                if (imagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+                    imagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Loading from URL: {imagePath}");
+                    return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
+                }
+
+                // Nếu là file:// URI, cần load từ StorageFile
+                if (imagePath.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Lấy đường dẫn file từ URI
+                    var filePath = imagePath.Replace("file:///", "").Replace("file://", "");
+                    filePath = filePath.Replace('/', '\\');
+                    
+                    System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Trying to load file: {filePath}");
+                    System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: File exists: {System.IO.File.Exists(filePath)}");
+                    
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        try
+                        {
+                            var file = await StorageFile.GetFileFromPathAsync(filePath);
+                            using (var stream = await file.OpenReadAsync())
+                            {
+                                var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+                                await bitmap.SetSourceAsync(stream);
+                                System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Successfully loaded image from file: {filePath}");
+                                return bitmap;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Error loading file from StorageFile: {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Stack trace: {ex.StackTrace}");
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: File not found: {filePath}");
+                        return null;
+                    }
+                }
+
+                // Nếu là đường dẫn tương đối bắt đầu bằng /, thêm ms-appx:// prefix
+                if (imagePath.StartsWith("/", StringComparison.Ordinal))
+                {
+                    var msAppxPath = "ms-appx://" + imagePath;
+                    return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(msAppxPath));
+                }
+
+                // Nếu là đường dẫn tương đối không có / ở đầu (như "Assets/Images/...")
+                if (!imagePath.Contains("://") && !System.IO.Path.IsPathRooted(imagePath))
+                {
+                    var msAppxPath = "ms-appx:///" + imagePath;
+                    return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(msAppxPath));
+                }
+
+                // Nếu đã có ms-appx://, load trực tiếp
+                if (imagePath.StartsWith("ms-appx://", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
+                }
+
+                // Fallback: thử load như URI thông thường
+                return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading image from '{imagePath}': {ex.Message}");
+                return null;
+            }
         }
 
         // Event Handlers
@@ -349,9 +460,12 @@ namespace Project_MyShop_2025.Views
                     };
                     var image = new Image 
                     { 
-                        Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(img.ImagePath)),
                         Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill 
                     };
+                    
+                    // Load ảnh async từ file path
+                    _ = LoadImageAsync(image, img.ImagePath);
+                    
                     border.Child = image;
                     imageStack.Children.Add(border);
                 }
@@ -632,6 +746,60 @@ namespace Project_MyShop_2025.Views
                 await notImplementedDialog.ShowAsync();
             }
         }
+
+        // Helper method để load ảnh từ file path cho Image control
+        private async Task LoadImageAsync(Image imageControl, string imagePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(imagePath))
+                    return;
+
+                // Nếu là URL (http/https), load trực tiếp
+                if (imagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
+                    imagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    imageControl.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
+                    return;
+                }
+
+                // Nếu là file:// URI, cần load từ StorageFile
+                if (imagePath.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Lấy đường dẫn file từ URI
+                    var filePath = imagePath.Replace("file:///", "").Replace("file://", "");
+                    filePath = filePath.Replace('/', '\\');
+                    
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        var file = await StorageFile.GetFileFromPathAsync(filePath);
+                        using (var stream = await file.OpenReadAsync())
+                        {
+                            var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+                            await bitmap.SetSourceAsync(stream);
+                            imageControl.Source = bitmap;
+                        }
+                        return;
+                    }
+                }
+
+                // Nếu là đường dẫn tương đối (ms-appx://), load trực tiếp
+                if (imagePath.StartsWith("ms-appx://", StringComparison.OrdinalIgnoreCase) || 
+                    imagePath.StartsWith("/", StringComparison.Ordinal))
+                {
+                    imageControl.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
+                    return;
+                }
+
+                // Fallback: thử load như URI thông thường
+                imageControl.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading image from '{imagePath}': {ex.Message}");
+                // Có thể set một placeholder image ở đây
+            }
+        }
     }
 
     // Helper classes
@@ -642,8 +810,10 @@ namespace Project_MyShop_2025.Views
         public bool IsSelected { get; set; }
     }
 
-    public class ProductDisplayModel
+    public class ProductDisplayModel : INotifyPropertyChanged
     {
+        private Microsoft.UI.Xaml.Media.ImageSource? _imageSource;
+
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string SKU { get; set; } = string.Empty;
@@ -652,7 +822,23 @@ namespace Project_MyShop_2025.Views
         public string PriceFormatted { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public string Image { get; set; } = string.Empty;
+        public Microsoft.UI.Xaml.Media.ImageSource? ImageSource 
+        { 
+            get => _imageSource;
+            set
+            {
+                _imageSource = value;
+                OnPropertyChanged();
+            }
+        }
         public string StockText { get; set; } = string.Empty;
         public string StockColor { get; set; } = string.Empty;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

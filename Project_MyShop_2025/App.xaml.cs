@@ -45,16 +45,23 @@ namespace Project_MyShop_2025
         {
             InitializeComponent();
 
-            // Set database path trong LocalAppData của app
+            // Set database path trong thư mục project (cùng thư mục với .exe)
             try
             {
-                var localFolder = ApplicationData.Current.LocalFolder;
-                var dbPath = System.IO.Path.Combine(localFolder.Path, "myshop.db");
+                // Lấy đường dẫn thư mục chứa .exe (output directory)
+                var exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                var exeDirectory = System.IO.Path.GetDirectoryName(exePath);
+                
+                // Database sẽ được lưu trong cùng thư mục với .exe
+                var dbPath = System.IO.Path.Combine(exeDirectory, "myshop.db");
                 Project_MyShop_2025.Core.Data.DatabasePathHelper.SetDatabasePath(dbPath);
+                System.Diagnostics.Debug.WriteLine($"Database path set to: {dbPath}");
             }
-            catch
+            catch (Exception ex)
             {
-                // Fallback: sử dụng default path
+                // Fallback: sử dụng default path (BaseDirectory)
+                System.Diagnostics.Debug.WriteLine($"Error setting database path: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Using default path: {AppDomain.CurrentDomain.BaseDirectory}");
             }
 
             var services = new ServiceCollection();

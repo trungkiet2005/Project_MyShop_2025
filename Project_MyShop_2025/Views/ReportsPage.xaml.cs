@@ -33,10 +33,14 @@ namespace Project_MyShop_2025.Views
         private async void ReportsPage_Loaded(object sender, RoutedEventArgs e)
         {
             // Set default date range from start of current month to today
-            _toDate = DateTime.Now.Date;
-            _fromDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            FromDatePicker.Date = _fromDate;
-            ToDatePicker.Date = _toDate;
+            var today = DateTime.Now.Date;
+            var firstDayOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            
+            _toDate = today;
+            _fromDate = firstDayOfMonth;
+            
+            FromDatePicker.Date = new DateTimeOffset(firstDayOfMonth);
+            ToDatePicker.Date = new DateTimeOffset(today);
 
             // Wait for layout to complete before loading charts
             this.UpdateLayout();

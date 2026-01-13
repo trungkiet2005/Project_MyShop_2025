@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System.Reflection;
 
 namespace Project_MyShop_2025.Core.Data
 {
@@ -37,6 +39,19 @@ namespace Project_MyShop_2025.Core.Data
             }
 
             // 2. TẠO PRODUCTS (SẢN PHẨM) - Chỉ seed nếu chưa có
+            // Để force reseed, uncomment các dòng dưới:
+            // if (context.ProductImages.Any())
+            // {
+            //     System.Diagnostics.Debug.WriteLine("Removing old product images to reseed with new image paths...");
+            //     context.ProductImages.RemoveRange(context.ProductImages);
+            // }
+            // if (context.Products.Any())
+            // {
+            //     System.Diagnostics.Debug.WriteLine("Removing old products to reseed with new image paths...");
+            //     context.Products.RemoveRange(context.Products);
+            //     context.SaveChanges();
+            // }
+            
             if (!context.Products.Any())
             {
                 var products = new List<Product>();
@@ -91,6 +106,42 @@ namespace Project_MyShop_2025.Core.Data
                 }
                 context.ProductImages.AddRange(productImages);
                 context.SaveChanges();
+                
+                System.Diagnostics.Debug.WriteLine($"Seeded {products.Count} products with images");
+            }
+            else
+            {
+                // Nếu đã có products, cập nhật lại đường dẫn ảnh cho chúng
+                System.Diagnostics.Debug.WriteLine("Products already exist, updating image paths...");
+                var existingProducts = context.Products.Include(p => p.ProductImages).ToList();
+                foreach (var product in existingProducts)
+                {
+                    var newImagePath = FindProductImageFile(product.Name);
+                    if (!string.IsNullOrEmpty(newImagePath))
+                    {
+                        // Cập nhật ảnh chính của product
+                        product.Image = newImagePath;
+                        
+                        // Cập nhật ProductImages nếu có
+                        var mainImage = product.ProductImages.OrderBy(img => img.DisplayOrder).FirstOrDefault();
+                        if (mainImage != null)
+                        {
+                            mainImage.ImagePath = newImagePath;
+                        }
+                        else
+                        {
+                            // Tạo ProductImage mới nếu chưa có
+                            context.ProductImages.Add(new ProductImage 
+                            { 
+                                ProductId = product.Id, 
+                                ImagePath = newImagePath, 
+                                DisplayOrder = 1 
+                            });
+                        }
+                    }
+                }
+                context.SaveChanges();
+                System.Diagnostics.Debug.WriteLine($"Updated image paths for {existingProducts.Count} existing products");
             }
 
             // 4. TẠO ORDERS (ĐƠN HÀNG) - Seed orders
@@ -386,12 +437,189 @@ namespace Project_MyShop_2025.Core.Data
 
         private static string GetProductImageUrl(string productName, string type)
         {
-            // Sử dụng dịch vụ placehold.co để tạo ảnh có chứa TÊN SẢN PHẨM
-            // Encode tên sản phẩm để an toàn trên URL
+            // Chỉ tìm file ảnh thực tế cho ảnh chính (Main)
+            // Các ảnh phụ (Side, Detail) sẽ dùng cùng file hoặc placeholder
+            if (type == "Main")
+            {
+                var imagePath = FindProductImageFile(productName);
+                if (!string.IsNullOrEmpty(imagePath))
+                {
+                    return imagePath;
+                }
+            }
+            else
+            {
+                // Cho ảnh phụ, thử dùng cùng file với ảnh chính
+                var mainImagePath = FindProductImageFile(productName);
+                if (!string.IsNullOrEmpty(mainImagePath))
+                {
+                    return mainImagePath; // Dùng cùng file cho tất cả ảnh
+                }
+            }
+            
+            // Fallback về placeholder nếu không tìm thấy file
             var encodedName = Uri.EscapeDataString($"{productName} - {type}");
-            // Màu nền ngẫu nhiên dựa trên tên (để không bị đơn điệu nhưng vẫn cố định)
             var color = Math.Abs(productName.GetHashCode()).ToString("X").Substring(0, 6);
             return $"https://placehold.co/600x400/{color}/FFF?text={encodedName}";
+        }
+
+        /// <summary>
+        /// Mapping tên sản phẩm với tên file ảnh (để xử lý các trường hợp đặc biệt)
+        /// </summary>
+        private static readonly Dictionary<string, string> ProductImageMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "iPhone 15 Pro Max", "iPhone_15_Pro_Max" },
+            { "Samsung Galaxy S24 Ultra", "Samsung_Galaxy_S24_Ultra" },
+            { "MacBook Pro 14 M3", "MacBook_Pro_14_M3" },
+            { "Sony WH-1000XM5", "Sony_WH-1000XM5" },
+            { "iPad Pro 12.9 M2", "iPad_Pro_12.9_M2" },
+            { "PlayStation 5 Slim", "PlayStation_5_Slim" },
+            { "Dell XPS 15 9530", "Dell_XPS_15_9530" },
+            { "Apple Watch Series 9", "Apple_Watch_Series_9" },
+            { "Nike Air Force 1", "Nike_Air_Force_1" },
+            { "Adidas Ultraboost Light", "Adidas_Ultraboost_Light" },
+            { "Levis 501 Original Jeans", "Levis_501_Original_Jeans" },
+            { "Uniqlo Áo Khoác Phao", "Uniqlo_Áo_Khoác_Phao" },
+            { "Ray-Ban Aviator", "Ray-Ban_Aviator" },
+            { "Zara Blazer Nam", "Zara_Blazer_Nam" },
+            { "Clean Code", "image_Code" }, // File có tên khác
+            { "Design Patterns (GoF)", "Design_Patterns" },
+            { "The Pragmatic Programmer", "The_Pragmatic_Programmer" },
+            { "Sổ tay Moleskine", "Sổ_tay_Moleskine" },
+            { "Bút Lamy Safari", "Bút_Lamy_Safari" },
+        };
+
+        /// <summary>
+        /// Tìm file ảnh của sản phẩm trong folder product_image
+        /// Hỗ trợ nhiều định dạng: .jpg, .png, .avif, .webp
+        /// </summary>
+        private static string? FindProductImageFile(string productName)
+        {
+            try
+            {
+                // Lấy đường dẫn của assembly hiện tại
+                var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+                var assemblyDirectory = Path.GetDirectoryName(assemblyLocation);
+                
+                if (string.IsNullOrEmpty(assemblyDirectory))
+                {
+                    // Fallback: sử dụng AppDomain.CurrentDomain.BaseDirectory
+                    assemblyDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                }
+                
+                // Tìm folder product_image
+                // Thử nhiều đường dẫn có thể (ưu tiên UI project Assets trước):
+                var possiblePaths = new[]
+                {
+                    // Trong output directory của UI project (AppX)
+                    Path.Combine(assemblyDirectory, "Assets", "product_image"),
+                    // Trong output directory của UI project (không phải AppX)
+                    Path.Combine(assemblyDirectory, "..", "Assets", "product_image"),
+                    Path.Combine(assemblyDirectory, "..", "..", "Assets", "product_image"),
+                    // Từ source code UI project
+                    Path.Combine(Directory.GetCurrentDirectory(), "Assets", "product_image"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "..", "Project_MyShop_2025", "Assets", "product_image"),
+                    // Từ Core project
+                    Path.Combine(assemblyDirectory, "..", "..", "..", "..", "Project_MyShop_2025.Core", "Assets", "product_image"),
+                    Path.Combine(Directory.GetCurrentDirectory(), "Project_MyShop_2025.Core", "Assets", "product_image"),
+                    // Thử với đường dẫn tuyệt đối từ workspace
+                    Path.GetFullPath(Path.Combine(assemblyDirectory, "..", "..", "..", "..", "Project_MyShop_2025", "Assets", "product_image")),
+                    Path.GetFullPath(Path.Combine(assemblyDirectory, "..", "..", "..", "..", "Project_MyShop_2025.Core", "Assets", "product_image")),
+                };
+                
+                string? productImageFolder = null;
+                foreach (var path in possiblePaths)
+                {
+                    var normalizedPath = Path.GetFullPath(path);
+                    if (Directory.Exists(normalizedPath))
+                    {
+                        productImageFolder = normalizedPath;
+                        break;
+                    }
+                }
+                
+                if (string.IsNullOrEmpty(productImageFolder))
+                {
+                    System.Diagnostics.Debug.WriteLine($"FindProductImageFile: Cannot find product_image folder.");
+                    System.Diagnostics.Debug.WriteLine($"Assembly location: {assemblyLocation}");
+                    System.Diagnostics.Debug.WriteLine($"Assembly directory: {assemblyDirectory}");
+                    System.Diagnostics.Debug.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
+                    System.Diagnostics.Debug.WriteLine($"Searched paths: {string.Join("\n  - ", possiblePaths.Select(p => $"{p} (Exists: {Directory.Exists(Path.GetFullPath(p))})"))}");
+                    return null;
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"FindProductImageFile: Found product_image folder at: {productImageFolder}");
+                
+                // Lấy tên file base từ mapping hoặc tự động generate
+                string fileNameBase;
+                if (ProductImageMapping.TryGetValue(productName, out var mappedName))
+                {
+                    fileNameBase = mappedName;
+                }
+                else
+                {
+                    // Chuyển đổi tên sản phẩm thành format tên file
+                    fileNameBase = productName
+                        .Replace(" ", "_")
+                        .Replace("-", "_")
+                        .Replace("(", "")
+                        .Replace(")", "")
+                        .Replace("&", "_");
+                }
+                
+                // Các định dạng ảnh được hỗ trợ (ưu tiên .jpg trước)
+                var extensions = new[] { ".jpg", ".jpeg", ".png", ".avif", ".webp" };
+                
+                // Tìm file với các extension khác nhau
+                foreach (var ext in extensions)
+                {
+                    var fileName = fileNameBase + ext;
+                    var fullPath = Path.Combine(productImageFolder, fileName);
+                    
+                    if (File.Exists(fullPath))
+                    {
+                        // Trả về đường dẫn file:// đúng format cho WinUI (cần 3 slashes: file:///)
+                        // Chuyển đổi backslash thành forward slash và thêm file:// prefix
+                        var uriPath = fullPath.Replace('\\', '/');
+                        if (!uriPath.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                        {
+                            uriPath = "file:///" + uriPath;
+                        }
+                        System.Diagnostics.Debug.WriteLine($"FindProductImageFile: Found image for '{productName}': {uriPath}");
+                        return uriPath;
+                    }
+                }
+                
+                // Nếu không tìm thấy với tên chính xác, thử tìm với tên gần đúng
+                var files = Directory.GetFiles(productImageFolder);
+                var matchingFile = files.FirstOrDefault(f => 
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(f);
+                    // So sánh không phân biệt hoa thường và bỏ qua dấu gạch dưới/khoảng trắng
+                    var normalizedFileName = fileName.Replace("_", "").Replace("-", "").Replace(" ", "").ToLowerInvariant();
+                    var normalizedProductName = productName.Replace(" ", "").Replace("-", "").Replace("_", "").Replace("(", "").Replace(")", "").ToLowerInvariant();
+                    return normalizedFileName.Contains(normalizedProductName) || normalizedProductName.Contains(normalizedFileName);
+                });
+                
+                if (matchingFile != null)
+                {
+                    // Trả về đường dẫn file:// đúng format cho WinUI
+                    var uriPath = matchingFile.Replace('\\', '/');
+                    if (!uriPath.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        uriPath = "file:///" + uriPath;
+                    }
+                    return uriPath;
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"FindProductImageFile: Cannot find image for product '{productName}' in folder '{productImageFolder}'. Available files: {string.Join(", ", files.Select(Path.GetFileName))}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"FindProductImageFile: Error finding image for '{productName}': {ex.Message}");
+                return null;
+            }
         }
 
         private static Order CreateOrder(CustomerInfo customer, DateTime date, OrderStatus status, (Product? prod, int qty)[] items)
