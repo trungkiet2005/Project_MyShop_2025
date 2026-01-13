@@ -11,7 +11,7 @@ namespace Project_MyShop_2025.Core.Data
         {
             if (context.Products.Any())
             {
-                return; // DB has been seeded
+                return; // DB has been  seeded
             }
 
             // Create 3 main categories as required
