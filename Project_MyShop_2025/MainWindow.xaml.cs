@@ -31,6 +31,7 @@ namespace Project_MyShop_2025
         {
             InitializeComponent();
             ViewModel = viewModel;
+            RootFrame.Navigate(typeof(Views.ConfigPage));
         }
     }
 }

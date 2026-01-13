@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Project_MyShop_2025.Views.ConfigPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Project_MyShop_2025.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="400" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Graphic Side (Left) -->
+        <Grid Grid.Column="0" Background="#F3E5F5">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+                <!-- Placeholder for Image -->
+                <Image Source="/Assets/Images/laptop.png" Width="300" Height="200" Stretch="Uniform" Opacity="0.8"/>
+                <TextBlock Text="System Configuration" FontSize="32" FontWeight="Bold" Foreground="#4A148C" HorizontalAlignment="Center"/>
+                <TextBlock Text="Setup your server connection" FontSize="16" Foreground="#7B1FA2" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Form Side (Right) -->
+        <Grid Grid.Column="1" Background="White" Padding="40">
+            <StackPanel VerticalAlignment="Center" Spacing="20">
+                <TextBlock Text="Server Configuration" FontSize="24" FontWeight="SemiBold" Foreground="#333"/>
+                
+                <TextBox x:Name="ServerAddressBox" Header="Server Address (IP or Hostname)" PlaceholderText="e.g. 192.168.1.100" />
+                <TextBox x:Name="ServerPortBox" Header="Port" PlaceholderText="e.g. 1433" InputScope="Number" />
+                <TextBox x:Name="DatabaseNameBox" Header="Database Name" PlaceholderText="e.g. MyShopDB" />
+                <TextBox x:Name="UsernameBox" Header="Username" PlaceholderText="DB User" />
+                <PasswordBox x:Name="PasswordBox" Header="Password" PlaceholderText="DB Password" />
+
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button Content="Test Connection" Click="TestConnection_Click" />
+                    <Button Content="Save" Style="{StaticResource AccentButtonStyle}" Click="Save_Click" />
+                </StackPanel>
+                
+                <TextBlock x:Name="StatusTextBlock" Margin="0,10,0,0" Foreground="Red" TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>
