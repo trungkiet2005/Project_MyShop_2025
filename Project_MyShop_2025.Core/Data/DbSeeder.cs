@@ -163,14 +163,14 @@ namespace Project_MyShop_2025.Core.Data
             context.ProductImages.AddRange(productImages);
             context.SaveChanges();
 
-            // ===== ADD SAMPLE ORDERS FOR DASHBOARD =====
+            // ===== ADD SAMPLE ORDERS FOR DASHBOARD AND REPORTS =====
             if (!context.Orders.Any())
             {
                 var random = new Random();
-                var customerNames = new[] { "Nguyễn Văn A", "Trần Thị B", "Lê Hoàng C", "Phạm Minh D", "Đặng Thu E", "Vũ Quang F", "Hoàng Lan G", "Bùi Hải H" };
+                var customerNames = new[] { "Nguyễn Văn A", "Trần Thị B", "Lê Hoàng C", "Phạm Minh D", "Đặng Thu E", "Vũ Quang F", "Hoàng Lan G", "Bùi Hải H", "Đỗ Văn I", "Lý Thị J", "Ngô Minh K", "Trương Hữu L" };
                 
-                // Create orders for the past 30 days including today
-                for (int i = 0; i < 30; i++)
+                // Create orders for the past 90 days (3 months) for better report data
+                for (int i = 0; i < 90; i++)
                 {
                     DateTime orderDate;
                     int ordersForDay;
@@ -179,27 +179,43 @@ namespace Project_MyShop_2025.Core.Data
                     if (i == 0) // Today
                     {
                         orderDate = DateTime.Now;
-                        ordersForDay = random.Next(3, 7);
+                        ordersForDay = random.Next(3, 8);
                     }
-                    else if (i == 1) // Yesterday
+                    else if (i < 7) // This week
                     {
-                        orderDate = DateTime.Now.AddDays(-1);
+                        orderDate = DateTime.Now.AddDays(-i);
                         ordersForDay = random.Next(2, 6);
                     }
-                    else
+                    else if (i < 30) // This month
                     {
                         orderDate = DateTime.Now.AddDays(-i);
                         ordersForDay = random.Next(1, 4);
                     }
+                    else // Older months
+                    {
+                        orderDate = DateTime.Now.AddDays(-i);
+                        ordersForDay = random.Next(0, 3);
+                    }
 
                     for (int j = 0; j < ordersForDay; j++)
                     {
+                        // Assign random status (Created, Paid, Cancelled)
+                        OrderStatus status;
+                        int statusRoll = random.Next(100);
+                        if (statusRoll < 70) // 70% Paid
+                            status = OrderStatus.Paid;
+                        else if (statusRoll < 85) // 15% Created
+                            status = OrderStatus.Created;
+                        else // 15% Cancelled
+                            status = OrderStatus.Cancelled;
+
                         var order = new Order
                         {
                             CustomerName = customerNames[random.Next(customerNames.Length)],
                             CustomerPhone = $"090{random.Next(1000000, 9999999)}",
                             CustomerAddress = $"{random.Next(1, 999)} Nguyễn Huệ, Q.1, TP.HCM",
-                            CreatedAt = orderDate.AddHours(random.Next(8, 20)).AddMinutes(random.Next(0, 60))
+                            CreatedAt = orderDate.AddHours(random.Next(8, 20)).AddMinutes(random.Next(0, 60)),
+                            Status = status
                         };
 
                         // Add 1-5 random items to each order
