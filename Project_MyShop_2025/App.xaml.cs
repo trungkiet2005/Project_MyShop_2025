@@ -16,6 +16,7 @@ using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -52,6 +53,11 @@ namespace Project_MyShop_2025
         {
             services.AddTransient<MainWindow>();
             services.AddTransient<ViewModels.MainViewModel>();
+
+            services.AddDbContext<Data.ShopDbContext>(options =>
+            {
+                options.UseSqlite("Data Source=myshop.db");
+            });
         }
 
         /// <summary>
