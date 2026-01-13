@@ -13,7 +13,11 @@
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
                         PaneDisplayMode="Left"
+                        IsPaneOpen="True"
                         IsPaneToggleButtonVisible="True"
+                        OpenPaneLength="240"
+                        CompactPaneLength="48"
+                        Background="#FFFFFF"
                         SelectionChanged="NavView_SelectionChanged">
             
             <NavigationView.MenuItems>
@@ -23,74 +27,75 @@
                 <NavigationViewItem Content="Reports" Tag="Reports" Icon="Document"/>
             </NavigationView.MenuItems>
 
+            <!-- User Profile + Logout in PaneFooter -->
             <NavigationView.PaneFooter>
-                <StackPanel Spacing="5" Padding="10">
-                    <Button Content="Logout" Click="Logout_Click" HorizontalAlignment="Stretch"/>
+                <StackPanel Spacing="0" Padding="12,8,12,12">
+                    <!-- User Profile Button with Flyout -->
+                    <Button x:Name="UserProfileButton" 
+                            Background="Transparent"
+                            BorderThickness="0"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="8,10"
+                            CornerRadius="8">
+                        <Button.Flyout>
+                            <MenuFlyout Placement="TopEdgeAlignedLeft">
+                                <MenuFlyoutItem Text="My Profile" Icon="Contact"/>
+                                <MenuFlyoutItem Text="Settings" Icon="Setting"/>
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutItem x:Name="LogoutMenuItem" Text="Logout" Click="Logout_Click">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE7E8;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                        <Grid Width="200">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Avatar -->
+                            <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#3B82F6" Offset="0"/>
+                                        <GradientStop Color="#8B5CF6" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <TextBlock x:Name="UserInitialText" 
+                                           Text="A" 
+                                           FontSize="16" 
+                                           FontWeight="Bold" 
+                                           Foreground="White"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            
+                            <!-- User Info -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
+                                <TextBlock x:Name="UserNameText" 
+                                           Text="Admin" 
+                                           FontSize="14" 
+                                           FontWeight="SemiBold"
+                                           Foreground="#0F172A"/>
+                                <TextBlock Text="Administrator" 
+                                           FontSize="11" 
+                                           Foreground="#64748B"/>
+                            </StackPanel>
+                            
+                            <!-- Dropdown Icon -->
+                            <FontIcon Grid.Column="2" Glyph="&#xE70D;" FontSize="12" Foreground="#94A3B8" 
+                                      VerticalAlignment="Center"/>
+                        </Grid>
+                    </Button>
                 </StackPanel>
             </NavigationView.PaneFooter>
 
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <!-- Header with Search and User Profile -->
-                <Border Grid.Row="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="24,16">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Global Search Bar -->
-                        <AutoSuggestBox x:Name="GlobalSearchBox"
-                                       Grid.Column="0"
-                                       PlaceholderText="Search orders, customers, products..."
-                                       QueryIcon="Find"
-                                       Width="500"
-                                       HorizontalAlignment="Left"
-                                       QuerySubmitted="GlobalSearchBox_QuerySubmitted"
-                                       TextChanged="GlobalSearchBox_TextChanged"
-                                       Margin="0,0,24,0"/>
-
-                        <!-- User Profile Section -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                            <Button x:Name="UserProfileButton" 
-                                    Click="UserProfileButton_Click"
-                                    Background="Transparent"
-                                    BorderThickness="0"
-                                    Padding="8,4">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Border Width="36" Height="36" CornerRadius="18" Background="#2196F3">
-                                        <TextBlock x:Name="UserInitialText" 
-                                                   Text="A" 
-                                                   FontSize="16" 
-                                                   FontWeight="Bold" 
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                    </Border>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock x:Name="UserNameText" 
-                                                   Text="Welcome, User" 
-                                                   FontSize="14" 
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#1A1A1A"/>
-                                        <TextBlock Text="Administrator" 
-                                                   FontSize="11" 
-                                                   Foreground="#666666"/>
-                                    </StackPanel>
-                                    <FontIcon Glyph="&#xE70D;" FontSize="16" Foreground="#666666"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <!-- Content Frame -->
-                <Frame x:Name="ContentFrame" Grid.Row="1"/>
-            </Grid>
+            <!-- Content Area - No Header Bar -->
+            <Frame x:Name="ContentFrame" Background="#F8FAFC"/>
         </NavigationView>
     </Grid>
 </Page>

@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Markup;
+using Microsoft.UI.Xaml.Media;
 using Project_MyShop_2025.Core.Data;
 using Project_MyShop_2025.Core.Models;
 using System;
@@ -25,6 +27,8 @@ namespace Project_MyShop_2025.Views
         private OrderStatus? _selectedStatus = null;
         private DateTime? _fromDate = null;
         private DateTime? _toDate = null;
+        private string _searchText = "";
+        private string _sortBy = "DateDesc";
 
         public OrdersPage()
         {
@@ -40,22 +44,93 @@ namespace Project_MyShop_2025.Views
 
         private async void OrdersPage_Loaded(object sender, RoutedEventArgs e)
         {
-            await LoadStatusFilters();
+            LoadStatusPills();
             await LoadOrders();
         }
 
-        private async Task LoadStatusFilters()
+        private void LoadStatusPills()
         {
             _statusFilters = new List<StatusFilterItem>
             {
-                new StatusFilterItem { Status = null, Name = "All Status", IsSelected = true }
+                new StatusFilterItem { Status = null, Name = "All", IsSelected = true },
+                new StatusFilterItem { Status = OrderStatus.Created, Name = "Created", IsSelected = false },
+                new StatusFilterItem { Status = OrderStatus.Paid, Name = "Paid", IsSelected = false },
+                new StatusFilterItem { Status = OrderStatus.Cancelled, Name = "Cancelled", IsSelected = false }
             };
 
-            _statusFilters.Add(new StatusFilterItem { Status = OrderStatus.Created, Name = "Created", IsSelected = false });
-            _statusFilters.Add(new StatusFilterItem { Status = OrderStatus.Paid, Name = "Paid", IsSelected = false });
-            _statusFilters.Add(new StatusFilterItem { Status = OrderStatus.Cancelled, Name = "Cancelled", IsSelected = false });
+            UpdateStatusPills();
+        }
 
-            StatusFilterList.ItemsSource = _statusFilters;
+        private void UpdateStatusPills()
+        {
+            StatusPillsPanel.Children.Clear();
+            
+            foreach (var statusItem in _statusFilters)
+            {
+                var isSelected = statusItem.Status == _selectedStatus;
+                
+                // Determine color based on status
+                string bgColor, fgColor, borderColor;
+                if (isSelected)
+                {
+                    switch (statusItem.Status)
+                    {
+                        case OrderStatus.Created:
+                            bgColor = "#DBEAFE"; fgColor = "#1D4ED8"; borderColor = "#3B82F6";
+                            break;
+                        case OrderStatus.Paid:
+                            bgColor = "#DCFCE7"; fgColor = "#15803D"; borderColor = "#22C55E";
+                            break;
+                        case OrderStatus.Cancelled:
+                            bgColor = "#FEE2E2"; fgColor = "#DC2626"; borderColor = "#EF4444";
+                            break;
+                        default: // All
+                            bgColor = "#3B82F6"; fgColor = "#FFFFFF"; borderColor = "#3B82F6";
+                            break;
+                    }
+                }
+                else
+                {
+                    bgColor = "#F1F5F9"; fgColor = "#475569"; borderColor = "#E2E8F0";
+                }
+                
+                var pill = new Button
+                {
+                    Content = statusItem.Name,
+                    Background = new SolidColorBrush(GetColorFromHex(bgColor)),
+                    Foreground = new SolidColorBrush(GetColorFromHex(fgColor)),
+                    BorderBrush = new SolidColorBrush(GetColorFromHex(borderColor)),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(16),
+                    Padding = new Thickness(16, 8, 16, 8),
+                    Tag = statusItem.Status,
+                    FontSize = 13,
+                    FontWeight = isSelected ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal
+                };
+                
+                pill.Click += StatusPill_Click;
+                StatusPillsPanel.Children.Add(pill);
+            }
+        }
+
+        private void StatusPill_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button)
+            {
+                _selectedStatus = button.Tag as OrderStatus?;
+                UpdateStatusPills();
+                ApplyFilters();
+            }
+        }
+
+        private static Windows.UI.Color GetColorFromHex(string hex)
+        {
+            hex = hex.Replace("#", "");
+            byte a = 255;
+            byte r = byte.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
+            byte g = byte.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
+            byte b = byte.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
+            return Windows.UI.Color.FromArgb(a, r, g, b);
         }
 
         private async Task LoadOrders()
@@ -81,6 +156,15 @@ namespace Project_MyShop_2025.Views
                     .ToList();
             }
 
+            // Search filter
+            if (!string.IsNullOrWhiteSpace(_searchText))
+            {
+                _filteredOrders = _filteredOrders
+                    .Where(o => (o.CustomerName?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                               o.Id.ToString().Contains(_searchText))
+                    .ToList();
+            }
+
             // Date range filter
             if (_fromDate.HasValue)
             {
@@ -95,6 +179,15 @@ namespace Project_MyShop_2025.Views
                     .Where(o => o.CreatedAt.Date <= _toDate.Value.Date)
                     .ToList();
             }
+
+            // Apply sorting
+            _filteredOrders = _sortBy switch
+            {
+                "DateAsc" => _filteredOrders.OrderBy(o => o.CreatedAt).ToList(),
+                "AmountDesc" => _filteredOrders.OrderByDescending(o => o.TotalPrice).ToList(),
+                "AmountAsc" => _filteredOrders.OrderBy(o => o.TotalPrice).ToList(),
+                _ => _filteredOrders.OrderByDescending(o => o.CreatedAt).ToList() // DateDesc
+            };
 
             // Update pagination
             _currentPage = 1;
@@ -137,49 +230,68 @@ namespace Project_MyShop_2025.Views
                 NextPageButton.IsEnabled = _currentPage < _totalPages;
             
             if (ResultsCountText != null)
-                ResultsCountText.Text = $"Showing {_filteredOrders.Count} order{(_filteredOrders.Count != 1 ? "s" : "")}";
+                ResultsCountText.Text = $"{_filteredOrders.Count} order{(_filteredOrders.Count != 1 ? "s" : "")}";
         }
 
         private void DisplayOrders(List<Order> orders)
         {
-            var displayOrders = orders.Select(o => new OrderDisplayModel
+            var displayOrders = orders.Select(o => 
             {
-                OrderId = $"#{o.Id}",
-                CustomerName = o.CustomerName ?? "Guest",
-                CreatedAt = o.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
-                TotalPriceFormatted = $"₫{o.TotalPrice:N0}",
-                Status = o.Status,
-                StatusText = o.Status.ToString(),
-                StatusColor = o.Status switch
+                // Determine status colors
+                string statusBg, statusFg;
+                switch (o.Status)
                 {
-                    OrderStatus.Created => "#2196F3",
-                    OrderStatus.Paid => "#4CAF50",
-                    OrderStatus.Cancelled => "#F44336",
-                    _ => "#9E9E9E"
-                },
-                ItemsSummary = o.Items.Count > 0 
-                    ? $"{o.Items.Count} item(s) - {string.Join(", ", o.Items.Take(3).Select(i => $"{i.Product?.Name ?? "Unknown"} x{i.Quantity}"))}"
-                    : "No items",
-                Order = o
+                    case OrderStatus.Created:
+                        statusBg = "#DBEAFE"; statusFg = "#1D4ED8";
+                        break;
+                    case OrderStatus.Paid:
+                        statusBg = "#DCFCE7"; statusFg = "#15803D";
+                        break;
+                    case OrderStatus.Cancelled:
+                        statusBg = "#FEE2E2"; statusFg = "#DC2626";
+                        break;
+                    default:
+                        statusBg = "#F1F5F9"; statusFg = "#64748B";
+                        break;
+                }
+
+                return new OrderDisplayModel
+                {
+                    OrderId = $"#{o.Id}",
+                    CustomerName = o.CustomerName ?? "Guest Customer",
+                    CreatedAt = o.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    TotalPriceFormatted = $"₫{o.TotalPrice:N0}",
+                    Status = o.Status,
+                    StatusText = o.Status.ToString(),
+                    StatusBackground = new SolidColorBrush(GetColorFromHex(statusBg)),
+                    StatusForeground = new SolidColorBrush(GetColorFromHex(statusFg)),
+                    ItemsCount = $"{o.Items.Count} item{(o.Items.Count != 1 ? "s" : "")}",
+                    ItemsSummary = o.Items.Count > 0 
+                        ? string.Join(", ", o.Items.Take(2).Select(i => i.Product?.Name ?? "Unknown"))
+                        : "No items",
+                    Order = o
+                };
             }).ToList();
 
             OrdersListView.ItemsSource = displayOrders;
         }
 
         // Event Handlers
-        private void StatusFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (StatusFilterList.SelectedItem is StatusFilterItem selected)
+            _searchText = SearchBox.Text?.Trim() ?? "";
+            ApplyFilters();
+        }
+
+        private void SortComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (SortComboBox.SelectedItem is ComboBoxItem item && item.Tag != null)
             {
-                _selectedStatus = selected.Status;
-                
-                // Update visual selection
-                foreach (var status in _statusFilters)
+                _sortBy = item.Tag.ToString() ?? "DateDesc";
+                if (_allOrders.Any())
                 {
-                    status.IsSelected = status.Status == selected.Status;
+                    ApplyFilters();
                 }
-                
-                ApplyFilters();
             }
         }
 
@@ -223,6 +335,26 @@ namespace Project_MyShop_2025.Views
             {
                 _pageSize = int.Parse(item.Tag.ToString() ?? "20");
                 UpdatePagination();
+            }
+        }
+
+        private void OrderCard_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (sender is Border border)
+            {
+                border.BorderBrush = new SolidColorBrush(
+                    Microsoft.UI.ColorHelper.FromArgb(255, 59, 130, 246));
+                border.BorderThickness = new Thickness(2);
+            }
+        }
+
+        private void OrderCard_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (sender is Border border)
+            {
+                border.BorderBrush = new SolidColorBrush(
+                    Microsoft.UI.ColorHelper.FromArgb(255, 226, 232, 240));
+                border.BorderThickness = new Thickness(1);
             }
         }
 
@@ -289,18 +421,18 @@ namespace Project_MyShop_2025.Views
 
             // Order Info
             var orderInfo = new StackPanel { Spacing = 8 };
-            orderInfo.Children.Add(new TextBlock { Text = "Order Information", FontWeight = new Windows.UI.Text.FontWeight(600), FontSize = 16 });
+            orderInfo.Children.Add(new TextBlock { Text = "Order Information", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 16 });
             orderInfo.Children.Add(new TextBlock { Text = $"Order ID: #{order.Id}" });
             orderInfo.Children.Add(new TextBlock { Text = $"Date: {order.CreatedAt:dd/MM/yyyy HH:mm:ss}" });
             orderInfo.Children.Add(new TextBlock { Text = $"Status: {order.Status}" });
-            orderInfo.Children.Add(new TextBlock { Text = $"Total: ₫{order.TotalPrice:N0}", FontWeight = new Windows.UI.Text.FontWeight(600), FontSize = 18, Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 33, 150, 243)) });
+            orderInfo.Children.Add(new TextBlock { Text = $"Total: ₫{order.TotalPrice:N0}", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 18, Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 59, 130, 246)) });
             content.Children.Add(orderInfo);
 
             // Customer Info
             if (!string.IsNullOrWhiteSpace(order.CustomerName) || !string.IsNullOrWhiteSpace(order.CustomerPhone) || !string.IsNullOrWhiteSpace(order.CustomerAddress))
             {
                 var customerInfo = new StackPanel { Spacing = 8 };
-                customerInfo.Children.Add(new TextBlock { Text = "Customer Information", FontWeight = new Windows.UI.Text.FontWeight(600), FontSize = 16, Margin = new Thickness(0, 8, 0, 0) });
+                customerInfo.Children.Add(new TextBlock { Text = "Customer Information", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 16, Margin = new Thickness(0, 8, 0, 0) });
                 if (!string.IsNullOrWhiteSpace(order.CustomerName))
                     customerInfo.Children.Add(new TextBlock { Text = $"Name: {order.CustomerName}" });
                 if (!string.IsNullOrWhiteSpace(order.CustomerPhone))
@@ -312,7 +444,7 @@ namespace Project_MyShop_2025.Views
 
             // Order Items
             var itemsInfo = new StackPanel { Spacing = 8 };
-            itemsInfo.Children.Add(new TextBlock { Text = "Order Items", FontWeight = new Windows.UI.Text.FontWeight(600), FontSize = 16, Margin = new Thickness(0, 8, 0, 0) });
+            itemsInfo.Children.Add(new TextBlock { Text = "Order Items", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontSize = 16, Margin = new Thickness(0, 8, 0, 0) });
 
             if (order.Items.Any())
             {
@@ -323,20 +455,20 @@ namespace Project_MyShop_2025.Views
                     itemPanel.Children.Add(new TextBlock 
                     { 
                         Text = $"{item.Product?.Name ?? "Unknown"} x{item.Quantity}",
-                        FontWeight = new Windows.UI.Text.FontWeight(500),
+                        FontWeight = Microsoft.UI.Text.FontWeights.Medium,
                         Width = 300
                     });
                     itemPanel.Children.Add(new TextBlock 
                     { 
                         Text = $"₫{item.Price:N0}",
-                        Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 102, 102, 102)),
+                        Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 100, 116, 139)),
                         Margin = new Thickness(16, 0, 0, 0),
                         Width = 100
                     });
                     itemPanel.Children.Add(new TextBlock 
                     { 
                         Text = $"₫{item.TotalPrice:N0}",
-                        FontWeight = new Windows.UI.Text.FontWeight(600),
+                        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                         HorizontalAlignment = HorizontalAlignment.Right,
                         Margin = new Thickness(16, 0, 0, 0)
                     });
@@ -346,7 +478,7 @@ namespace Project_MyShop_2025.Views
             }
             else
             {
-                itemsInfo.Children.Add(new TextBlock { Text = "No items in this order.", Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 158, 158, 158)) });
+                itemsInfo.Children.Add(new TextBlock { Text = "No items in this order.", Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 148, 163, 184)) });
             }
             content.Children.Add(itemsInfo);
 
@@ -414,7 +546,7 @@ namespace Project_MyShop_2025.Views
             statusCombo.SelectedItem = statusCombo.Items.Cast<ComboBoxItem>().FirstOrDefault(i => (OrderStatus)i.Tag == order.Status);
 
             var content = new StackPanel { Spacing = 8 };
-            content.Children.Add(new TextBlock { Text = $"Order #{order.Id}", FontWeight = new Windows.UI.Text.FontWeight(600), Margin = new Thickness(0, 0, 0, 8) });
+            content.Children.Add(new TextBlock { Text = $"Order #{order.Id}", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 8) });
             content.Children.Add(statusCombo);
 
             dialog.Content = content;
@@ -480,7 +612,6 @@ namespace Project_MyShop_2025.Views
             var products = await _context.Products.ToListAsync();
             productsList.ItemsSource = products;
             
-            // Set ItemTemplate to display product names
             var xaml = @"<DataTemplate xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">
                 <TextBlock Text=""{Binding Name}"" Margin=""8,4,0,4"" VerticalAlignment=""Center""/>
             </DataTemplate>";
@@ -500,7 +631,6 @@ namespace Project_MyShop_2025.Views
                 {
                     foreach (Product selectedProduct in productsList.SelectedItems)
                     {
-                        // Check if product already added
                         if (!selectedProducts.Any(sp => sp.product.Id == selectedProduct.Id))
                         {
                             var qty = int.TryParse(quantityBox.Text, out int q) ? q : 1;
@@ -574,9 +704,10 @@ namespace Project_MyShop_2025.Views
         public string TotalPriceFormatted { get; set; } = string.Empty;
         public OrderStatus Status { get; set; }
         public string StatusText { get; set; } = string.Empty;
-        public string StatusColor { get; set; } = string.Empty;
+        public SolidColorBrush StatusBackground { get; set; } = new SolidColorBrush(Microsoft.UI.Colors.Gray);
+        public SolidColorBrush StatusForeground { get; set; } = new SolidColorBrush(Microsoft.UI.Colors.White);
+        public string ItemsCount { get; set; } = string.Empty;
         public string ItemsSummary { get; set; } = string.Empty;
         public Order Order { get; set; } = null!;
     }
 }
-

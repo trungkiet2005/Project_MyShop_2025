@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Project_MyShop_2025.Core.Data;
 using Project_MyShop_2025.Core.Models;
 using System;
@@ -23,7 +24,7 @@ namespace Project_MyShop_2025.Views
         private List<CategoryFilterItem> _categories = new();
         
         private int _currentPage = 1;
-        private int _pageSize = 24;
+        private int _pageSize = 40;
         private int _totalPages = 1;
         private int? _selectedCategoryId = null;
 
@@ -64,7 +65,53 @@ namespace Project_MyShop_2025.Views
                 });
             }
 
-            CategoryFilterList.ItemsSource = _categories;
+            // Update ComboBox
+            CategoryComboBox.ItemsSource = _categories;
+            CategoryComboBox.SelectedIndex = 0;
+
+            // Update Category Pills
+            UpdateCategoryPills();
+        }
+
+        private void UpdateCategoryPills()
+        {
+            CategoryPillsPanel.Children.Clear();
+            
+            foreach (var category in _categories)
+            {
+                var isSelected = category.Id == _selectedCategoryId || 
+                                (category.Id == null && _selectedCategoryId == null);
+                
+                var pill = new Button
+                {
+                    Content = category.Name,
+                    Background = isSelected 
+                        ? new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 59, 130, 246))
+                        : new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 243, 244, 246)),
+                    Foreground = isSelected
+                        ? new SolidColorBrush(Microsoft.UI.Colors.White)
+                        : new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 55, 65, 81)),
+                    CornerRadius = new CornerRadius(16),
+                    Padding = new Thickness(14, 6, 14, 6),
+                    BorderThickness = new Thickness(0),
+                    Tag = category.Id,
+                    FontSize = 12,
+                    FontWeight = isSelected ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal
+                };
+                
+                pill.Click += CategoryPill_Click;
+                CategoryPillsPanel.Children.Add(pill);
+            }
+        }
+
+        private void CategoryPill_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button)
+            {
+                _selectedCategoryId = button.Tag as int?;
+                UpdateCategoryPills();
+                ApplyFilters();
+            }
         }
 
         private async Task LoadProducts()
@@ -152,7 +199,7 @@ namespace Project_MyShop_2025.Views
                 DisplayProducts(pagedProducts);
             }
 
-            // Update UI - Thêm kiểm tra null để tránh lỗi khi các control chưa khởi tạo xong
+            // Update UI
             if (PageInfoText != null)
                 PageInfoText.Text = $"Page {_currentPage} of {_totalPages}";
             
@@ -163,7 +210,7 @@ namespace Project_MyShop_2025.Views
                 NextPageButton.IsEnabled = _currentPage < _totalPages;
             
             if (ResultsCountText != null)
-                ResultsCountText.Text = $"Showing {_filteredProducts.Count} product{(_filteredProducts.Count != 1 ? "s" : "")}";
+                ResultsCountText.Text = $"{_filteredProducts.Count} item{(_filteredProducts.Count != 1 ? "s" : "")}";
         }
 
         private void DisplayProducts(List<Product> products)
@@ -171,6 +218,34 @@ namespace Project_MyShop_2025.Views
             var displayProducts = products.Select(p => 
             {
                 var imagePath = p.ProductImages.OrderBy(img => img.DisplayOrder).FirstOrDefault()?.ImagePath ?? p.Image ?? "/Assets/placeholder.png";
+                
+                // Determine stock status and colors
+                string stockBadgeText;
+                string stockBadgeBg;
+                string stockBadgeFg;
+                
+                if (p.Quantity == 0)
+                {
+                    // Out of Stock - Red/Gray
+                    stockBadgeText = "Out of stock";
+                    stockBadgeBg = "#FEE2E2";
+                    stockBadgeFg = "#DC2626";
+                }
+                else if (p.Quantity < 10)
+                {
+                    // Low Stock - Yellow/Orange
+                    stockBadgeText = $"Low: {p.Quantity}";
+                    stockBadgeBg = "#FEF3C7";
+                    stockBadgeFg = "#D97706";
+                }
+                else
+                {
+                    // In Stock - Green
+                    stockBadgeText = $"In stock: {p.Quantity}";
+                    stockBadgeBg = "#DCFCE7";
+                    stockBadgeFg = "#16A34A";
+                }
+
                 return new ProductDisplayModel
                 {
                     Id = p.Id,
@@ -181,15 +256,26 @@ namespace Project_MyShop_2025.Views
                     PriceFormatted = $"₫{p.Price:N0}",
                     Quantity = p.Quantity,
                     Image = imagePath,
-                    StockText = p.Quantity < 5 ? $"{p.Quantity} left" : $"{p.Quantity} in stock",
-                    StockColor = p.Quantity < 5 ? "#F44336" : "#4CAF50"
+                    StockBadgeText = stockBadgeText,
+                    StockBadgeBackground = new SolidColorBrush(GetColorFromHex(stockBadgeBg)),
+                    StockBadgeForeground = new SolidColorBrush(GetColorFromHex(stockBadgeFg))
                 };
             }).ToList();
 
             ProductsGridView.ItemsSource = displayProducts;
             
-            // Load ảnh async sau khi set ItemsSource
+            // Load images async
             _ = LoadImagesForProductsAsync(displayProducts);
+        }
+
+        private static Windows.UI.Color GetColorFromHex(string hex)
+        {
+            hex = hex.Replace("#", "");
+            byte a = 255;
+            byte r = byte.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
+            byte g = byte.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
+            byte b = byte.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
+            return Windows.UI.Color.FromArgb(a, r, g, b);
         }
 
         private async Task LoadImagesForProductsAsync(List<ProductDisplayModel> products)
@@ -212,79 +298,54 @@ namespace Project_MyShop_2025.Views
             try
             {
                 if (string.IsNullOrEmpty(imagePath))
-                {
-                    System.Diagnostics.Debug.WriteLine("GetImageSourceAsync: imagePath is null or empty");
                     return null;
-                }
 
-                System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Loading image from '{imagePath}'");
-
-                // Nếu là URL (http/https), load trực tiếp
+                // URL (http/https)
                 if (imagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
                     imagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                 {
-                    System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Loading from URL: {imagePath}");
                     return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
                 }
 
-                // Nếu là file:// URI, cần load từ StorageFile
+                // file:// URI
                 if (imagePath.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Lấy đường dẫn file từ URI
                     var filePath = imagePath.Replace("file:///", "").Replace("file://", "");
                     filePath = filePath.Replace('/', '\\');
                     
-                    System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Trying to load file: {filePath}");
-                    System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: File exists: {System.IO.File.Exists(filePath)}");
-                    
                     if (System.IO.File.Exists(filePath))
                     {
-                        try
+                        var file = await StorageFile.GetFileFromPathAsync(filePath);
+                        using (var stream = await file.OpenReadAsync())
                         {
-                            var file = await StorageFile.GetFileFromPathAsync(filePath);
-                            using (var stream = await file.OpenReadAsync())
-                            {
-                                var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
-                                await bitmap.SetSourceAsync(stream);
-                                System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Successfully loaded image from file: {filePath}");
-                                return bitmap;
-                            }
+                            var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+                            await bitmap.SetSourceAsync(stream);
+                            return bitmap;
                         }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Error loading file from StorageFile: {ex.Message}");
-                            System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: Stack trace: {ex.StackTrace}");
-                            return null;
-                        }
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"GetImageSourceAsync: File not found: {filePath}");
-                        return null;
                     }
                 }
 
-                // Nếu là đường dẫn tương đối bắt đầu bằng /, thêm ms-appx:// prefix
+                // Relative path starting with /
                 if (imagePath.StartsWith("/", StringComparison.Ordinal))
                 {
                     var msAppxPath = "ms-appx://" + imagePath;
                     return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(msAppxPath));
                 }
 
-                // Nếu là đường dẫn tương đối không có / ở đầu (như "Assets/Images/...")
+                // Relative path without /
                 if (!imagePath.Contains("://") && !System.IO.Path.IsPathRooted(imagePath))
                 {
                     var msAppxPath = "ms-appx:///" + imagePath;
                     return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(msAppxPath));
                 }
 
-                // Nếu đã có ms-appx://, load trực tiếp
+                // ms-appx:// path
                 if (imagePath.StartsWith("ms-appx://", StringComparison.OrdinalIgnoreCase))
                 {
                     return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
                 }
 
-                // Fallback: thử load như URI thông thường
+                // Fallback
                 return new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
             }
             catch (Exception ex)
@@ -295,18 +356,12 @@ namespace Project_MyShop_2025.Views
         }
 
         // Event Handlers
-        private void CategoryFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void CategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (CategoryFilterList.SelectedItem is CategoryFilterItem selected)
+            if (CategoryComboBox.SelectedItem is CategoryFilterItem selected)
             {
                 _selectedCategoryId = selected.Id;
-                
-                // Update visual selection
-                foreach (var cat in _categories)
-                {
-                    cat.IsSelected = cat.Id == selected.Id;
-                }
-                
+                UpdateCategoryPills();
                 ApplyFilters();
             }
         }
@@ -351,16 +406,8 @@ namespace Project_MyShop_2025.Views
         {
             if (PageSizeComboBox != null && PageSizeComboBox.SelectedItem is ComboBoxItem item && item.Tag != null)
             {
-                _pageSize = int.Parse(item.Tag.ToString() ?? "24");
+                _pageSize = int.Parse(item.Tag.ToString() ?? "40");
                 UpdatePagination();
-            }
-        }
-
-        private async void ViewProduct_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.Tag is int productId)
-            {
-                await ShowProductDetails(productId);
             }
         }
 
@@ -399,9 +446,10 @@ namespace Project_MyShop_2025.Views
         {
             if (sender is Border border)
             {
-                border.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                    Microsoft.UI.ColorHelper.FromArgb(255, 33, 150, 243));
+                border.BorderBrush = new SolidColorBrush(
+                    Microsoft.UI.ColorHelper.FromArgb(255, 59, 130, 246));
                 border.BorderThickness = new Thickness(2);
+                border.Scale = new System.Numerics.Vector3(1.02f, 1.02f, 1f);
             }
         }
 
@@ -409,93 +457,14 @@ namespace Project_MyShop_2025.Views
         {
             if (sender is Border border)
             {
-                border.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                    Microsoft.UI.ColorHelper.FromArgb(255, 224, 224, 224));
+                border.BorderBrush = new SolidColorBrush(
+                    Microsoft.UI.ColorHelper.FromArgb(255, 229, 231, 235));
                 border.BorderThickness = new Thickness(1);
+                border.Scale = new System.Numerics.Vector3(1f, 1f, 1f);
             }
         }
 
         // Dialog Methods
-        private async Task ShowProductDetails(int productId)
-        {
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.ProductImages)
-                .FirstOrDefaultAsync(p => p.Id == productId);
-
-            if (product == null) return;
-
-            var dialog = new ContentDialog
-            {
-                Title = product.Name,
-                CloseButtonText = "Close",
-                XamlRoot = this.XamlRoot
-            };
-
-            var content = new StackPanel { Spacing = 12 };
-            
-            // Images
-            if (product.ProductImages.Any())
-            {
-                var imagesPanel = new StackPanel { Spacing = 8 };
-                imagesPanel.Children.Add(new TextBlock 
-                { 
-                    Text = "Product Images", 
-                    FontWeight = new Windows.UI.Text.FontWeight(600),
-                    Margin = new Thickness(0, 0, 0, 8)
-                });
-
-                var scrollViewer = new ScrollViewer { HorizontalScrollBarVisibility = ScrollBarVisibility.Auto };
-                var imageStack = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-                
-                foreach (var img in product.ProductImages.OrderBy(i => i.DisplayOrder))
-                {
-                    var border = new Border 
-                    { 
-                        Width = 150, 
-                        Height = 150, 
-                        CornerRadius = new CornerRadius(8),
-                        Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.ColorHelper.FromArgb(255, 245, 245, 245))
-                    };
-                    var image = new Image 
-                    { 
-                        Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill 
-                    };
-                    
-                    // Load ảnh async từ file path
-                    _ = LoadImageAsync(image, img.ImagePath);
-                    
-                    border.Child = image;
-                    imageStack.Children.Add(border);
-                }
-                
-                scrollViewer.Content = imageStack;
-                imagesPanel.Children.Add(scrollViewer);
-                content.Children.Add(imagesPanel);
-            }
-
-            content.Children.Add(new TextBlock { Text = $"SKU: {product.SKU ?? "N/A"}" });
-            content.Children.Add(new TextBlock { Text = $"Category: {product.Category?.Name ?? "N/A"}" });
-            content.Children.Add(new TextBlock { Text = $"Price: ₫{product.Price:N0}" });
-            content.Children.Add(new TextBlock { Text = $"Import Price: ₫{product.ImportPrice:N0}" });
-            content.Children.Add(new TextBlock { Text = $"Quantity: {product.Quantity}" });
-            
-            if (!string.IsNullOrWhiteSpace(product.Description))
-            {
-                content.Children.Add(new TextBlock 
-                { 
-                    Text = "Description", 
-                    FontWeight = new Windows.UI.Text.FontWeight(600),
-                    Margin = new Thickness(0, 8, 0, 0)
-                });
-                content.Children.Add(new TextBlock { Text = product.Description, TextWrapping = TextWrapping.Wrap });
-            }
-
-            dialog.Content = content;
-            await dialog.ShowAsync();
-        }
-
         private async Task ShowEditProductDialog(int productId)
         {
             var product = await _context.Products
@@ -710,7 +679,6 @@ namespace Project_MyShop_2025.Views
             var file = await picker.PickSingleFileAsync();
             if (file != null)
             {
-                // TODO: Implement Excel import logic
                 var notImplementedDialog = new ContentDialog
                 {
                     Title = "Import from Excel",
@@ -735,7 +703,6 @@ namespace Project_MyShop_2025.Views
             var file = await picker.PickSingleFileAsync();
             if (file != null)
             {
-                // TODO: Implement Access import logic
                 var notImplementedDialog = new ContentDialog
                 {
                     Title = "Import from Access",
@@ -744,60 +711,6 @@ namespace Project_MyShop_2025.Views
                     XamlRoot = this.XamlRoot
                 };
                 await notImplementedDialog.ShowAsync();
-            }
-        }
-
-        // Helper method để load ảnh từ file path cho Image control
-        private async Task LoadImageAsync(Image imageControl, string imagePath)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(imagePath))
-                    return;
-
-                // Nếu là URL (http/https), load trực tiếp
-                if (imagePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || 
-                    imagePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                {
-                    imageControl.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
-                    return;
-                }
-
-                // Nếu là file:// URI, cần load từ StorageFile
-                if (imagePath.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Lấy đường dẫn file từ URI
-                    var filePath = imagePath.Replace("file:///", "").Replace("file://", "");
-                    filePath = filePath.Replace('/', '\\');
-                    
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        var file = await StorageFile.GetFileFromPathAsync(filePath);
-                        using (var stream = await file.OpenReadAsync())
-                        {
-                            var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
-                            await bitmap.SetSourceAsync(stream);
-                            imageControl.Source = bitmap;
-                        }
-                        return;
-                    }
-                }
-
-                // Nếu là đường dẫn tương đối (ms-appx://), load trực tiếp
-                if (imagePath.StartsWith("ms-appx://", StringComparison.OrdinalIgnoreCase) || 
-                    imagePath.StartsWith("/", StringComparison.Ordinal))
-                {
-                    imageControl.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
-                    return;
-                }
-
-                // Fallback: thử load như URI thông thường
-                imageControl.Source = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(imagePath));
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading image from '{imagePath}': {ex.Message}");
-                // Có thể set một placeholder image ở đây
             }
         }
     }
@@ -822,6 +735,7 @@ namespace Project_MyShop_2025.Views
         public string PriceFormatted { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public string Image { get; set; } = string.Empty;
+        
         public Microsoft.UI.Xaml.Media.ImageSource? ImageSource 
         { 
             get => _imageSource;
@@ -831,8 +745,11 @@ namespace Project_MyShop_2025.Views
                 OnPropertyChanged();
             }
         }
-        public string StockText { get; set; } = string.Empty;
-        public string StockColor { get; set; } = string.Empty;
+        
+        // Stock Badge Properties
+        public string StockBadgeText { get; set; } = string.Empty;
+        public SolidColorBrush StockBadgeBackground { get; set; } = new SolidColorBrush(Microsoft.UI.Colors.Gray);
+        public SolidColorBrush StockBadgeForeground { get; set; } = new SolidColorBrush(Microsoft.UI.Colors.White);
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

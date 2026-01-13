@@ -7,255 +7,312 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="#F8F9FA">
+    Background="#F8FAFC">
 
-    <Grid Padding="24">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,24">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="Product Management" FontSize="32" FontWeight="Bold" Foreground="#1A1A1A"/>
-                <TextBlock Text="Manage your product catalog" FontSize="14" Foreground="#666666" Margin="0,4,0,0"/>
-            </StackPanel>
-
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                <Button x:Name="ImportButton" Click="ImportButton_Click" Background="#9C27B0" Foreground="White" CornerRadius="8" Padding="16,10">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE8B5;" FontSize="16"/>
-                        <TextBlock Text="Import Data"/>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="AddCategoryButton" Click="AddCategoryButton_Click" Background="#FF9800" Foreground="White" CornerRadius="8" Padding="16,10">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE710;" FontSize="16"/>
-                        <TextBlock Text="Add Category"/>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="AddProductButton" Click="AddProductButton_Click" Background="#2196F3" Foreground="White" CornerRadius="8" Padding="16,10">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE710;" FontSize="16"/>
-                        <TextBlock Text="Add Product"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <!-- Category Filter -->
-        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,16">
+        <!-- Row 0: Page Header -->
+        <Border Grid.Row="0" Background="White" Padding="24,20" 
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                
-                <TextBlock Grid.Column="0" Text="Category:" FontSize="14" FontWeight="SemiBold" Foreground="#1A1A1A" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                <ListView x:Name="CategoryFilterList" Grid.Column="1" SelectionMode="Single" SelectionChanged="CategoryFilter_SelectionChanged">
-                    <ListView.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="8"/>
-                        </ItemsPanelTemplate>
-                    </ListView.ItemsPanel>
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#E3F2FD" CornerRadius="20" Padding="16,8" BorderBrush="#2196F3" BorderThickness="1">
-                                <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="Medium" Foreground="#2196F3"/>
-                            </Border>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </Grid>
-        </Border>
-
-        <!-- Search and Filter Bar -->
-        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="16"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="16"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Search Box -->
-                <TextBox x:Name="SearchBox" Grid.Column="0" PlaceholderText="Search products by name..." 
-                         TextChanged="SearchBox_TextChanged" VerticalAlignment="Center">
-                    <TextBox.Resources>
-                        <SolidColorBrush x:Key="TextControlBackground" Color="#F5F5F5"/>
-                    </TextBox.Resources>
-                </TextBox>
-
-                <!-- Min Price -->
-                <StackPanel Grid.Column="2" Spacing="4">
-                    <TextBlock Text="Min Price" FontSize="11" Foreground="#666666"/>
-                    <TextBox x:Name="MinPriceBox" PlaceholderText="0" TextChanged="PriceFilter_Changed"/>
+                <!-- Left: Title & Count -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <TextBlock Text="Product Management" FontSize="24" FontWeight="Bold" Foreground="#0F172A"/>
+                    <Border Background="#EFF6FF" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
+                        <TextBlock x:Name="ResultsCountText" Text="0 products" FontSize="13" 
+                                   Foreground="#3B82F6" FontWeight="SemiBold"/>
+                    </Border>
                 </StackPanel>
 
-                <!-- Max Price -->
-                <StackPanel Grid.Column="4" Spacing="4">
-                    <TextBlock Text="Max Price" FontSize="11" Foreground="#666666"/>
-                    <TextBox x:Name="MaxPriceBox" PlaceholderText="∞" TextChanged="PriceFilter_Changed"/>
-                </StackPanel>
+                <!-- Right: Action Buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
+                    <!-- Import Button -->
+                    <Button x:Name="ImportButton" Click="ImportButton_Click" 
+                            Background="White" BorderBrush="#E2E8F0" BorderThickness="1" 
+                            CornerRadius="8" Padding="14,10" ToolTipService.ToolTip="Import from Excel/Access">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE8B5;" FontSize="16" Foreground="#64748B"/>
+                            <TextBlock Text="Import" FontSize="13" Foreground="#475569"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Add Category Button -->
+                    <Button x:Name="AddCategoryButton" Click="AddCategoryButton_Click" 
+                            Background="White" BorderBrush="#E2E8F0" BorderThickness="1" 
+                            CornerRadius="8" Padding="14,10" ToolTipService.ToolTip="Add new category">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE8F4;" FontSize="16" Foreground="#64748B"/>
+                            <TextBlock Text="Category" FontSize="13" Foreground="#475569"/>
+                        </StackPanel>
+                    </Button>
 
-                <!-- Sort -->
-                <StackPanel Grid.Column="6" Spacing="4">
-                    <TextBlock Text="Sort By" FontSize="11" Foreground="#666666"/>
-                    <ComboBox x:Name="SortComboBox" Width="180" SelectionChanged="SortComboBox_SelectionChanged">
-                        <ComboBoxItem Content="Name (A-Z)" Tag="NameAsc" IsSelected="True"/>
-                        <ComboBoxItem Content="Name (Z-A)" Tag="NameDesc"/>
-                        <ComboBoxItem Content="Price (Low to High)" Tag="PriceAsc"/>
-                        <ComboBoxItem Content="Price (High to Low)" Tag="PriceDesc"/>
-                        <ComboBoxItem Content="Stock (Low to High)" Tag="StockAsc"/>
-                        <ComboBoxItem Content="Stock (High to Low)" Tag="StockDesc"/>
-                    </ComboBox>
+                    <!-- Add Product Button (Primary) -->
+                    <Button x:Name="AddProductButton" Click="AddProductButton_Click" 
+                            Background="#3B82F6" Foreground="White" CornerRadius="8" Padding="16,10">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE710;" FontSize="16"/>
+                            <TextBlock Text="Add Product" FontSize="13" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Products Grid -->
-        <Border Grid.Row="3" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
+        <!-- Row 1: Filters & Search Toolbar -->
+        <Border Grid.Row="1" Background="#FFFFFF" Padding="24,16" 
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Results Count -->
-                <TextBlock x:Name="ResultsCountText" Grid.Row="0" Text="Loading products..." FontSize="13" Foreground="#666666" Margin="0,0,0,16"/>
+                <!-- Row 0: Search and Filters -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="350"/>
+                        <ColumnDefinition Width="24"/>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="180"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- Products ListView -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <GridView x:Name="ProductsGridView" SelectionMode="None">
-                        <GridView.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4"/>
-                            </ItemsPanelTemplate>
-                        </GridView.ItemsPanel>
-                        <GridView.ItemTemplate>
+                    <!-- Search Box -->
+                    <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="8" 
+                            BorderBrush="#E2E8F0" BorderThickness="1" Padding="0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="44"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Grid.Column="0" Glyph="&#xE721;" FontSize="16" 
+                                      Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                            <TextBox x:Name="SearchBox" Grid.Column="1" 
+                                     PlaceholderText="Search by product name, SKU..." 
+                                     TextChanged="SearchBox_TextChanged" 
+                                     BorderThickness="0" Background="Transparent"
+                                     VerticalAlignment="Center" Padding="0,10"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Category Dropdown -->
+                    <ComboBox x:Name="CategoryComboBox" Grid.Column="2" 
+                              PlaceholderText="All Categories" 
+                              SelectionChanged="CategoryComboBox_SelectionChanged"
+                              HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="White" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1" 
-                                        Width="260" Margin="8" Padding="0" PointerEntered="ProductCard_PointerEntered" 
-                                        PointerExited="ProductCard_PointerExited">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="200"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <!-- Product Image -->
-                                        <Border Grid.Row="0" CornerRadius="12,12,0,0" Background="#F5F5F5">
-                                            <Image Source="{Binding ImageSource}" Stretch="UniformToFill"/>
-                                        </Border>
-
-                                        <!-- Product Info -->
-                                        <StackPanel Grid.Row="1" Padding="16,12">
-                                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" 
-                                                      Foreground="#1A1A1A" TextTrimming="CharacterEllipsis" MaxLines="2"/>
-                                            <TextBlock Text="{Binding SKU}" FontSize="11" Foreground="#999999" Margin="0,4,0,0"/>
-                                            <Grid Margin="0,8,0,0">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" Text="{Binding PriceFormatted}" FontSize="18" 
-                                                          FontWeight="Bold" Foreground="#2196F3" VerticalAlignment="Center"/>
-                                                <Border Grid.Column="1" Background="{Binding StockColor}" CornerRadius="4" Padding="8,4">
-                                                    <TextBlock Text="{Binding StockText}" FontSize="10" Foreground="White" FontWeight="SemiBold"/>
-                                                </Border>
-                                            </Grid>
-                                        </StackPanel>
-
-                                        <!-- Action Buttons -->
-                                        <Grid Grid.Row="2" Padding="12" Background="#F8F9FA" CornerRadius="0,0,12,12">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            
-                                            <Button Grid.Column="0" Background="Transparent" BorderBrush="Transparent" 
-                                                   Click="ViewProduct_Click" Tag="{Binding Id}" HorizontalAlignment="Stretch">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <FontIcon Glyph="&#xE8F4;" FontSize="14" Foreground="#2196F3"/>
-                                                    <TextBlock Text="View" FontSize="12" Foreground="#2196F3"/>
-                                                </StackPanel>
-                                            </Button>
-                                            
-                                            <Button Grid.Column="1" Background="Transparent" BorderBrush="Transparent" 
-                                                   Click="EditProduct_Click" Tag="{Binding Id}" HorizontalAlignment="Stretch">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <FontIcon Glyph="&#xE70F;" FontSize="14" Foreground="#FF9800"/>
-                                                    <TextBlock Text="Edit" FontSize="12" Foreground="#FF9800"/>
-                                                </StackPanel>
-                                            </Button>
-                                            
-                                            <Button Grid.Column="2" Background="Transparent" BorderBrush="Transparent" 
-                                                   Click="DeleteProduct_Click" Tag="{Binding Id}" HorizontalAlignment="Stretch">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#F44336"/>
-                                                    <TextBlock Text="Delete" FontSize="12" Foreground="#F44336"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
-                                </Border>
+                                <TextBlock Text="{Binding Name}"/>
                             </DataTemplate>
-                        </GridView.ItemTemplate>
-                    </GridView>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Price Filter Button with Flyout -->
+                    <Button Grid.Column="4" Background="#F8FAFC" BorderBrush="#E2E8F0" 
+                            BorderThickness="1" CornerRadius="8" Padding="14,8" Height="40">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE7BF;" FontSize="14" Foreground="#64748B"/>
+                            <TextBlock Text="Price Range" FontSize="13" Foreground="#475569"/>
+                            <FontIcon Glyph="&#xE70D;" FontSize="10" Foreground="#94A3B8"/>
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout Placement="Bottom">
+                                <StackPanel Spacing="16" Width="240" Padding="4">
+                                    <TextBlock Text="Filter by Price" FontWeight="SemiBold" FontSize="14" Foreground="#0F172A"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="20"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="MinPriceBox" Grid.Column="0" 
+                                                 PlaceholderText="Min ₫" TextChanged="PriceFilter_Changed"/>
+                                        <TextBlock Grid.Column="1" Text="—" VerticalAlignment="Center" 
+                                                   HorizontalAlignment="Center" Foreground="#94A3B8"/>
+                                        <TextBox x:Name="MaxPriceBox" Grid.Column="2" 
+                                                 PlaceholderText="Max ₫" TextChanged="PriceFilter_Changed"/>
+                                    </Grid>
+                                    <Button Content="Apply Filter" HorizontalAlignment="Stretch" 
+                                            Background="#3B82F6" Foreground="White" CornerRadius="6"/>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <!-- Sort Dropdown -->
+                    <ComboBox x:Name="SortComboBox" Grid.Column="6" 
+                              SelectionChanged="SortComboBox_SelectionChanged" 
+                              HorizontalAlignment="Stretch">
+                        <ComboBoxItem Content="Sort: Name (A-Z)" Tag="NameAsc" IsSelected="True"/>
+                        <ComboBoxItem Content="Sort: Name (Z-A)" Tag="NameDesc"/>
+                        <ComboBoxItem Content="Sort: Price Low → High" Tag="PriceAsc"/>
+                        <ComboBoxItem Content="Sort: Price High → Low" Tag="PriceDesc"/>
+                        <ComboBoxItem Content="Sort: Stock Low → High" Tag="StockAsc"/>
+                        <ComboBoxItem Content="Sort: Stock High → Low" Tag="StockDesc"/>
+                    </ComboBox>
+                </Grid>
+
+                <!-- Row 2: Category Pills -->
+                <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" 
+                              VerticalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="CategoryPillsPanel" Orientation="Horizontal" Spacing="10"/>
                 </ScrollViewer>
             </Grid>
         </Border>
 
-        <!-- Pagination -->
-        <Grid Grid.Row="4" Margin="0,16,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <!-- Row 2: Products Grid -->
+        <ScrollViewer Grid.Row="2" Padding="24,20" VerticalScrollBarVisibility="Auto" 
+                      Background="#F8FAFC">
+            <GridView x:Name="ProductsGridView" SelectionMode="None" HorizontalAlignment="Stretch">
+                <GridView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="5" 
+                                       ItemWidth="220" HorizontalAlignment="Left"/>
+                    </ItemsPanelTemplate>
+                </GridView.ItemsPanel>
+                <GridView.ItemContainerStyle>
+                    <Style TargetType="GridViewItem">
+                        <Setter Property="Margin" Value="0,0,16,16"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                    </Style>
+                </GridView.ItemContainerStyle>
+                <GridView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" CornerRadius="12" 
+                                BorderBrush="#E2E8F0" BorderThickness="1" 
+                                Width="204" 
+                                PointerEntered="ProductCard_PointerEntered" 
+                                PointerExited="ProductCard_PointerExited">
+                            <Border.Shadow>
+                                <ThemeShadow/>
+                            </Border.Shadow>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="160"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
 
-            <Button x:Name="PrevPageButton" Grid.Column="0" Click="PrevPage_Click" Background="White" 
-                    BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="16,10">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE76B;" FontSize="14"/>
-                    <TextBlock Text="Previous"/>
+                                <!-- Product Image -->
+                                <Border Grid.Row="0" CornerRadius="12,12,0,0" Background="#F8FAFC">
+                                    <Grid>
+                                        <Image Source="{Binding ImageSource}" Stretch="UniformToFill"/>
+                                        <!-- Stock Badge (Top Right) -->
+                                        <Border Background="{Binding StockBadgeBackground}" 
+                                                CornerRadius="6" Padding="8,4" 
+                                                HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                                Margin="8">
+                                            <TextBlock Text="{Binding StockBadgeText}" FontSize="11" 
+                                                       FontWeight="SemiBold" 
+                                                       Foreground="{Binding StockBadgeForeground}"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Product Info -->
+                                <StackPanel Grid.Row="1" Padding="14,12,14,14" Spacing="6">
+                                    <!-- Name -->
+                                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" 
+                                               Foreground="#0F172A" TextTrimming="CharacterEllipsis" 
+                                               MaxLines="2" LineHeight="20"/>
+                                    <!-- SKU -->
+                                    <TextBlock Text="{Binding SKU}" FontSize="12" Foreground="#94A3B8"/>
+                                    
+                                    <!-- Price & Actions Row -->
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <TextBlock Grid.Column="0" Text="{Binding PriceFormatted}" 
+                                                   FontSize="16" FontWeight="Bold" Foreground="#3B82F6" 
+                                                   VerticalAlignment="Center"/>
+                                        
+                                        <!-- Action Buttons -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                            <Button Background="Transparent" BorderThickness="0" 
+                                                    Padding="8" CornerRadius="6"
+                                                    Click="EditProduct_Click" Tag="{Binding Id}"
+                                                    ToolTipService.ToolTip="Edit product">
+                                                <FontIcon Glyph="&#xE70F;" FontSize="14" Foreground="#F59E0B"/>
+                                            </Button>
+                                            <Button Background="Transparent" BorderThickness="0" 
+                                                    Padding="8" CornerRadius="6"
+                                                    Click="DeleteProduct_Click" Tag="{Binding Id}"
+                                                    ToolTipService.ToolTip="Delete product">
+                                                <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+        </ScrollViewer>
+
+        <!-- Row 3: Pagination -->
+        <Border Grid.Row="3" Background="White" Padding="24,14" 
+                BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="PrevPageButton" Grid.Column="0" Click="PrevPage_Click" 
+                        Background="White" BorderBrush="#E2E8F0" BorderThickness="1" 
+                        CornerRadius="8" Padding="16,10">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE76B;" FontSize="12" Foreground="#64748B"/>
+                        <TextBlock Text="Previous" FontSize="13" Foreground="#475569"/>
+                    </StackPanel>
+                </Button>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" 
+                            Spacing="16" VerticalAlignment="Center">
+                    <TextBlock x:Name="PageInfoText" Text="Page 1 of 1" FontSize="13" 
+                               Foreground="#64748B" VerticalAlignment="Center" FontWeight="Medium"/>
+                    <Border Background="#E2E8F0" Width="1" Height="20"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Show:" FontSize="13" Foreground="#64748B" VerticalAlignment="Center"/>
+                        <ComboBox x:Name="PageSizeComboBox" Width="90" 
+                                  SelectionChanged="PageSize_SelectionChanged">
+                            <ComboBoxItem Content="20 items" Tag="20"/>
+                            <ComboBoxItem Content="40 items" Tag="40" IsSelected="True"/>
+                            <ComboBoxItem Content="60 items" Tag="60"/>
+                            <ComboBoxItem Content="All" Tag="-1"/>
+                        </ComboBox>
+                    </StackPanel>
                 </StackPanel>
-            </Button>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" VerticalAlignment="Center">
-                <TextBlock x:Name="PageInfoText" Text="Page 1 of 1" FontSize="14" Foreground="#666666" VerticalAlignment="Center"/>
-                <TextBlock Text="•" FontSize="14" Foreground="#E0E0E0" VerticalAlignment="Center"/>
-                <TextBlock Text="Items per page:" FontSize="14" Foreground="#666666" VerticalAlignment="Center"/>
-                <ComboBox x:Name="PageSizeComboBox" Width="80" SelectionChanged="PageSize_SelectionChanged">
-                    <ComboBoxItem Content="12" Tag="12"/>
-                    <ComboBoxItem Content="24" Tag="24" IsSelected="True"/>
-                    <ComboBoxItem Content="48" Tag="48"/>
-                    <ComboBoxItem Content="All" Tag="-1"/>
-                </ComboBox>
-            </StackPanel>
-
-            <Button x:Name="NextPageButton" Grid.Column="2" Click="NextPage_Click" Background="White" 
-                    BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="16,10">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Next"/>
-                    <FontIcon Glyph="&#xE76C;" FontSize="14"/>
-                </StackPanel>
-            </Button>
-        </Grid>
+                <Button x:Name="NextPageButton" Grid.Column="2" Click="NextPage_Click" 
+                        Background="White" BorderBrush="#E2E8F0" BorderThickness="1" 
+                        CornerRadius="8" Padding="16,10">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Next" FontSize="13" Foreground="#475569"/>
+                        <FontIcon Glyph="&#xE76C;" FontSize="12" Foreground="#64748B"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
     </Grid>
 </Page>
