@@ -69,7 +69,7 @@ namespace Project_MyShop_2025
             using (var scope = Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<Project_MyShop_2025.Core.Data.ShopDbContext>();
-                // context.Database.Migrate(); // Ensure database is migrated
+                context.Database.Migrate(); // Ensure database is migrated
                 Project_MyShop_2025.Core.Data.DbSeeder.Seed(context);
             }
 

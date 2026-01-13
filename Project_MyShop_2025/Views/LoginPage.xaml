@@ -82,6 +82,11 @@
                     <HyperlinkButton Content="Settings" Click="NavigateToConfig_Click" Foreground="#7B1FA2" FontWeight="SemiBold"/>
                 </StackPanel>
 
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
+                    <TextBlock Text="New User?" Foreground="Gray"/>
+                    <HyperlinkButton Content="Signup" Click="Signup_Click" Foreground="#7B1FA2" FontWeight="SemiBold"/>
+                </StackPanel>
+
             </StackPanel>
 
             <!-- Version Info at Bottom Right -->
