@@ -44,6 +44,24 @@ namespace Project_MyShop_2025.Views
 
         private async void OrdersPage_Loaded(object sender, RoutedEventArgs e)
         {
+            // Load page size from settings
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            var pageSizeSetting = localSettings.Values["OrdersPerPage"] as string ?? "20";
+            if (int.TryParse(pageSizeSetting, out int pageSize))
+            {
+                _pageSize = pageSize;
+            }
+
+            // Update the page size combo box to match
+            foreach (ComboBoxItem item in PageSizeComboBox.Items)
+            {
+                if (item.Tag?.ToString() == _pageSize.ToString())
+                {
+                    PageSizeComboBox.SelectedItem = item;
+                    break;
+                }
+            }
+
             LoadStatusPills();
             await LoadOrders();
         }

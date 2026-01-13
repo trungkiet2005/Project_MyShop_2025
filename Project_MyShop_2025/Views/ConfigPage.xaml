@@ -7,42 +7,196 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="#F8FAFC">
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="400" />
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <!-- Graphic Side (Left) -->
-        <Grid Grid.Column="0" Background="#F3E5F5">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-                <!-- Placeholder for Image -->
-                <Image Source="/Assets/Images/laptop.png" Width="300" Height="200" Stretch="Uniform" Opacity="0.8"/>
-                <TextBlock Text="System Configuration" FontSize="32" FontWeight="Bold" Foreground="#4A148C" HorizontalAlignment="Center"/>
-                <TextBlock Text="Setup your server connection" FontSize="16" Foreground="#7B1FA2" HorizontalAlignment="Center"/>
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" Padding="24,20" 
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                <TextBlock Text="Settings" FontSize="24" FontWeight="Bold" Foreground="#0F172A"/>
             </StackPanel>
-        </Grid>
+        </Border>
 
-        <!-- Form Side (Right) -->
-        <Grid Grid.Column="1" Background="White" Padding="40">
-            <StackPanel VerticalAlignment="Center" Spacing="20">
-                <TextBlock Text="Server Configuration" FontSize="24" FontWeight="SemiBold" Foreground="#333"/>
-                
-                <TextBox x:Name="ServerAddressBox" Header="Server Address (IP or Hostname)" PlaceholderText="e.g. 192.168.1.100" />
-                <TextBox x:Name="ServerPortBox" Header="Port" PlaceholderText="e.g. 1433" InputScope="Number" />
-                <TextBox x:Name="DatabaseNameBox" Header="Database Name" PlaceholderText="e.g. MyShopDB" />
-                <TextBox x:Name="UsernameBox" Header="Username" PlaceholderText="DB User" />
-                <PasswordBox x:Name="PasswordBox" Header="Password" PlaceholderText="DB Password" />
+        <!-- Settings Content -->
+        <ScrollViewer Grid.Row="1" Padding="24,20" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Left">
 
-                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,20,0,0">
-                    <Button Content="Test Connection" Click="TestConnection_Click" />
-                    <Button Content="Save" Style="{StaticResource AccentButtonStyle}" Click="Save_Click" />
-                </StackPanel>
-                
-                <TextBlock x:Name="StatusTextBlock" Margin="0,10,0,0" Foreground="Red" TextWrapping="Wrap" />
+                <!-- Display Settings Section -->
+                <Border Background="White" CornerRadius="12" Padding="24" 
+                        BorderBrush="#E2E8F0" BorderThickness="1">
+                    <StackPanel Spacing="20">
+                        <StackPanel>
+                            <TextBlock Text="Display Settings" FontSize="18" FontWeight="SemiBold" Foreground="#0F172A"/>
+                            <TextBlock Text="Customize how content is displayed" FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <!-- Products Per Page -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Products per page" FontWeight="Medium" Foreground="#0F172A"/>
+                                <TextBlock Text="Number of products shown on each page in Products list" 
+                                           FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            
+                            <ComboBox x:Name="ProductsPerPageCombo" Grid.Column="1" Width="120"
+                                      SelectionChanged="ProductsPerPageCombo_SelectionChanged">
+                                <ComboBoxItem Content="5" Tag="5"/>
+                                <ComboBoxItem Content="10" Tag="10"/>
+                                <ComboBoxItem Content="15" Tag="15"/>
+                                <ComboBoxItem Content="20" Tag="20" IsSelected="True"/>
+                                <ComboBoxItem Content="40" Tag="40"/>
+                                <ComboBoxItem Content="50" Tag="50"/>
+                            </ComboBox>
+                        </Grid>
+
+                        <!-- Orders Per Page -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Orders per page" FontWeight="Medium" Foreground="#0F172A"/>
+                                <TextBlock Text="Number of orders shown on each page in Orders list" 
+                                           FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            
+                            <ComboBox x:Name="OrdersPerPageCombo" Grid.Column="1" Width="120"
+                                      SelectionChanged="OrdersPerPageCombo_SelectionChanged">
+                                <ComboBoxItem Content="10" Tag="10"/>
+                                <ComboBoxItem Content="20" Tag="20" IsSelected="True"/>
+                                <ComboBoxItem Content="30" Tag="30"/>
+                                <ComboBoxItem Content="50" Tag="50"/>
+                            </ComboBox>
+                        </Grid>
+
+                        <!-- Remember Last Page -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Remember last page" FontWeight="Medium" Foreground="#0F172A"/>
+                                <TextBlock Text="Open the last visited page when starting the app" 
+                                           FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            
+                            <ToggleSwitch x:Name="RememberLastPageToggle" Grid.Column="1" 
+                                          OnContent="On" OffContent="Off"
+                                          Toggled="RememberLastPageToggle_Toggled"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Database Settings Section -->
+                <Border Background="White" CornerRadius="12" Padding="24" 
+                        BorderBrush="#E2E8F0" BorderThickness="1">
+                    <StackPanel Spacing="20">
+                        <StackPanel>
+                            <TextBlock Text="Database Connection" FontSize="18" FontWeight="SemiBold" Foreground="#0F172A"/>
+                            <TextBlock Text="Configure your database server connection" FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBox x:Name="ServerAddressBox" Grid.Column="0" Header="Server Address" 
+                                     PlaceholderText="e.g. localhost or 192.168.1.100"/>
+                            <TextBox x:Name="ServerPortBox" Grid.Column="2" Header="Port" 
+                                     PlaceholderText="5432" InputScope="Number"/>
+                        </Grid>
+
+                        <TextBox x:Name="DatabaseNameBox" Header="Database Name" PlaceholderText="e.g. MyShopDB"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBox x:Name="UsernameBox" Grid.Column="0" Header="Username" PlaceholderText="DB User"/>
+                            <PasswordBox x:Name="PasswordBox" Grid.Column="2" Header="Password" PlaceholderText="Password"/>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button Click="TestConnection_Click" Background="White" 
+                                    BorderBrush="#E2E8F0" BorderThickness="1" 
+                                    CornerRadius="8" Padding="16,10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE8AF;" FontSize="14" Foreground="#64748B"/>
+                                    <TextBlock Text="Test Connection" Foreground="#475569"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Click="Save_Click" Background="#3B82F6" Foreground="White" 
+                                    CornerRadius="8" Padding="16,10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74E;" FontSize="14"/>
+                                    <TextBlock Text="Save Settings"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                        
+                        <TextBlock x:Name="StatusTextBlock" FontSize="13" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- AI Settings Section -->
+                <Border Background="White" CornerRadius="12" Padding="24" 
+                        BorderBrush="#E2E8F0" BorderThickness="1">
+                    <StackPanel Spacing="20">
+                        <StackPanel>
+                            <TextBlock Text="AI Assistant" FontSize="18" FontWeight="SemiBold" Foreground="#0F172A"/>
+                            <TextBlock Text="Configure your Gemini API settings" FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <PasswordBox x:Name="GeminiApiKeyBox" Header="Gemini API Key" 
+                                     PlaceholderText="Enter your Gemini API key..."
+                                     PasswordRevealMode="Peek"/>
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <HyperlinkButton Content="Get API Key →" 
+                                             NavigateUri="https://aistudio.google.com/apikey"/>
+                            <Button Click="SaveApiKey_Click" Background="#8B5CF6" Foreground="White" 
+                                    CornerRadius="8" Padding="16,10">
+                                <TextBlock Text="Save API Key"/>
+                            </Button>
+                        </StackPanel>
+                        
+                        <TextBlock x:Name="ApiKeyStatusText" FontSize="13"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- About Section -->
+                <Border Background="White" CornerRadius="12" Padding="24" 
+                        BorderBrush="#E2E8F0" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="About" FontSize="18" FontWeight="SemiBold" Foreground="#0F172A"/>
+                        <TextBlock Text="MyShop 2025" FontWeight="Medium" Foreground="#0F172A"/>
+                        <TextBlock Text="Version 1.0.0" FontSize="12" Foreground="#64748B"/>
+                        <TextBlock Text="A modern shop management application" FontSize="12" Foreground="#64748B"/>
+                    </StackPanel>
+                </Border>
+
             </StackPanel>
-        </Grid>
+        </ScrollViewer>
     </Grid>
 </Page>

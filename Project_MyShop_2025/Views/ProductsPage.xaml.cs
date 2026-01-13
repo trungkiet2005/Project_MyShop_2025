@@ -42,6 +42,24 @@ namespace Project_MyShop_2025.Views
 
         private async void ProductsPage_Loaded(object sender, RoutedEventArgs e)
         {
+            // Load page size from settings
+            var localSettings = ApplicationData.Current.LocalSettings;
+            var pageSizeSetting = localSettings.Values["ProductsPerPage"] as string ?? "20";
+            if (int.TryParse(pageSizeSetting, out int pageSize))
+            {
+                _pageSize = pageSize;
+            }
+
+            // Update the page size combo box to match
+            foreach (ComboBoxItem item in PageSizeComboBox.Items)
+            {
+                if (item.Tag?.ToString() == _pageSize.ToString())
+                {
+                    PageSizeComboBox.SelectedItem = item;
+                    break;
+                }
+            }
+
             await LoadCategories();
             await LoadProducts();
         }
