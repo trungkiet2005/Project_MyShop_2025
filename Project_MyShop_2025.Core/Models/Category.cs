@@ -12,6 +12,8 @@ namespace Project_MyShop_2025.Core.Models
         public string Name { get; set; } = string.Empty;
 
         // Navigation property
+        public string? Description { get; set; }
+
         public ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

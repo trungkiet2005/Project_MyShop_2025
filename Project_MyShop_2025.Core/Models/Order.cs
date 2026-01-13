@@ -11,7 +11,7 @@ namespace Project_MyShop_2025.Core.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        public double TotalPrice { get; set; }
+        public int TotalPrice { get; set; }
 
         public string? CustomerName { get; set; }
         public string? CustomerPhone { get; set; }

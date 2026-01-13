@@ -18,6 +18,8 @@ namespace Project_MyShop_2025.Core.Models
 
         public int Quantity { get; set; }
 
-        public double Price { get; set; } // Price at the time of purchase
+        public int Price { get; set; } // Unit sale price
+        
+        public int TotalPrice { get; set; }
     }
 }

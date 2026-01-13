@@ -12,10 +12,14 @@ namespace Project_MyShop_2025.Core.Models
         [Required]
         public string Name { get; set; } = string.Empty;
 
+        public string? SKU { get; set; }
+
         public string? Description { get; set; }
 
-        [Range(0, double.MaxValue)]
-        public double Price { get; set; }
+        [Range(0, int.MaxValue)]
+        public int Price { get; set; }
+
+        public int ImportPrice { get; set; }
 
         public string? Image { get; set; }
 
