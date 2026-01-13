@@ -54,7 +54,7 @@ namespace Project_MyShop_2025
             services.AddTransient<MainWindow>();
             services.AddTransient<ViewModels.MainViewModel>();
 
-            services.AddDbContext<Data.ShopDbContext>(options =>
+            services.AddDbContext<Project_MyShop_2025.Core.Data.ShopDbContext>(options =>
             {
                 options.UseSqlite("Data Source=myshop.db");
             });

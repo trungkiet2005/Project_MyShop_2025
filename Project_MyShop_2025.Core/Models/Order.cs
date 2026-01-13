@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Project_MyShop_2025.Models
+namespace Project_MyShop_2025.Core.Models
 {
     public class Order
     {
