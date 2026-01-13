@@ -1,4 +1,5 @@
 using Project_MyShop_2025.Core.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,9 +93,23 @@ namespace Project_MyShop_2025.Core.Data
                 context.SaveChanges();
             }
 
-                // 4. TẠO ORDERS (ĐƠN HÀNG) - Chỉ seed nếu chưa có Orders
-                SeedOrders(context);
-                System.Diagnostics.Debug.WriteLine("Seed completed successfully");
+            // 4. TẠO ORDERS (ĐƠN HÀNG) - Seed orders
+            System.Diagnostics.Debug.WriteLine("About to call SeedOrders...");
+            // Reload Products từ database để đảm bảo có đầy đủ thông tin
+            context.ChangeTracker.Clear();
+            
+            // Kiểm tra xem có orders hợp lệ không (có items)
+            var existingOrdersWithItems = context.Orders
+                .Include(o => o.Items)
+                .Where(o => o.Items.Any())
+                .Count();
+            
+            // Nếu không có orders hợp lệ, force seed lại
+            bool shouldForceSeed = existingOrdersWithItems == 0;
+            System.Diagnostics.Debug.WriteLine($"Existing orders with items: {existingOrdersWithItems}, Force seed: {shouldForceSeed}");
+            
+            SeedOrders(context, force: shouldForceSeed);
+            System.Diagnostics.Debug.WriteLine("Seed completed successfully");
             }
             catch (Exception ex)
             {
@@ -109,113 +124,247 @@ namespace Project_MyShop_2025.Core.Data
         }
 
         // Method riêng để seed Orders - có thể gọi độc lập
-        public static void SeedOrders(ShopDbContext context)
+        // force: nếu true, sẽ xóa tất cả orders hiện có và seed lại
+        public static void SeedOrders(ShopDbContext context, bool force = false)
         {
-            // Chỉ seed nếu chưa có Orders
-            if (context.Orders.Any())
+            try
             {
-                return; // Đã có Orders rồi, không seed lại
-            }
+                System.Diagnostics.Debug.WriteLine("SeedOrders: Starting...");
+                
+                // Kiểm tra có Products chưa - PHẢI KIỂM TRA TRƯỚC
+                var productCount = context.Products.Count();
+                System.Diagnostics.Debug.WriteLine($"SeedOrders: Found {productCount} products");
+                if (productCount == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("SeedOrders: No products found, cannot seed orders");
+                    return; // Cần có Products trước
+                }
 
-            // Kiểm tra có Products chưa
-            if (!context.Products.Any())
-            {
-                return; // Cần có Products trước
-            }
+                // Nếu force = true, xóa tất cả orders hiện có
+                if (force)
+                {
+                    System.Diagnostics.Debug.WriteLine("SeedOrders: Force mode - removing all existing orders...");
+                    var allOrders = context.Orders
+                        .Include(o => o.Items)
+                        .ToList();
+                    context.Orders.RemoveRange(allOrders);
+                    context.SaveChanges();
+                    System.Diagnostics.Debug.WriteLine($"SeedOrders: Removed {allOrders.Count} orders");
+                }
+                else
+                {
+                    // Chỉ seed nếu chưa có Orders HOẶC orders rỗng (không có items)
+                    var existingOrdersCount = context.Orders.Count();
+                    var ordersWithItems = context.Orders
+                        .Include(o => o.Items)
+                        .Where(o => o.Items.Any())
+                        .Count();
+                    
+                    System.Diagnostics.Debug.WriteLine($"SeedOrders: Found {existingOrdersCount} orders, {ordersWithItems} with items");
+                    
+                    if (ordersWithItems > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine("SeedOrders: Orders with items already exist, skipping");
+                        return; // Đã có Orders hợp lệ rồi, không seed lại
+                    }
+                    
+                    // Nếu có orders nhưng không có items, xóa chúng đi để seed lại
+                    if (existingOrdersCount > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine("SeedOrders: Found empty orders, removing them...");
+                        var emptyOrders = context.Orders
+                            .Include(o => o.Items)
+                            .Where(o => !o.Items.Any())
+                            .ToList();
+                        context.Orders.RemoveRange(emptyOrders);
+                        context.SaveChanges();
+                        System.Diagnostics.Debug.WriteLine($"SeedOrders: Removed {emptyOrders.Count} empty orders");
+                    }
+                }
 
-            // Tạo danh sách khách hàng cố định
-            var customers = newListCustomer();
-            
-            // Lấy danh sách sản phẩm từ database
-            var products = context.Products.ToList();
-            var iphone = products.FirstOrDefault(p => p.SKU == "ELEC001");
-            var samsung = products.FirstOrDefault(p => p.SKU == "ELEC002");
-            var macbook = products.FirstOrDefault(p => p.SKU == "ELEC003");
-            var sonyHeadphone = products.FirstOrDefault(p => p.SKU == "ELEC004");
-            var ipad = products.FirstOrDefault(p => p.SKU == "ELEC005");
-            var ps5 = products.FirstOrDefault(p => p.SKU == "ELEC006");
-            var dellXps = products.FirstOrDefault(p => p.SKU == "ELEC007");
-            var appleWatch = products.FirstOrDefault(p => p.SKU == "ELEC008");
-            var nikeShoe = products.FirstOrDefault(p => p.SKU == "FASH001");
-            var adidasShoe = products.FirstOrDefault(p => p.SKU == "FASH002");
-            var jeans = products.FirstOrDefault(p => p.SKU == "FASH003");
-            var jacket = products.FirstOrDefault(p => p.SKU == "FASH004");
-            var sunglasses = products.FirstOrDefault(p => p.SKU == "FASH005");
-            var blazer = products.FirstOrDefault(p => p.SKU == "FASH006");
-            var bookCleanCode = products.FirstOrDefault(p => p.SKU == "BOOK001");
-            var bookDesign = products.FirstOrDefault(p => p.SKU == "BOOK002");
-            var bookPragmatic = products.FirstOrDefault(p => p.SKU == "BOOK003");
-            var notebook = products.FirstOrDefault(p => p.SKU == "STAT001");
-            var pen = products.FirstOrDefault(p => p.SKU == "STAT002");
+                // Tạo danh sách khách hàng cố định
+                var customers = newListCustomer();
+                System.Diagnostics.Debug.WriteLine($"SeedOrders: Created {customers.Count} customers");
+                
+                // Lấy danh sách sản phẩm từ database
+                var products = context.Products.ToList();
+                var iphone = products.FirstOrDefault(p => p.SKU == "ELEC001");
+                var samsung = products.FirstOrDefault(p => p.SKU == "ELEC002");
+                var macbook = products.FirstOrDefault(p => p.SKU == "ELEC003");
+                var sonyHeadphone = products.FirstOrDefault(p => p.SKU == "ELEC004");
+                var ipad = products.FirstOrDefault(p => p.SKU == "ELEC005");
+                var ps5 = products.FirstOrDefault(p => p.SKU == "ELEC006");
+                var dellXps = products.FirstOrDefault(p => p.SKU == "ELEC007");
+                var appleWatch = products.FirstOrDefault(p => p.SKU == "ELEC008");
+                var nikeShoe = products.FirstOrDefault(p => p.SKU == "FASH001");
+                var adidasShoe = products.FirstOrDefault(p => p.SKU == "FASH002");
+                var jeans = products.FirstOrDefault(p => p.SKU == "FASH003");
+                var jacket = products.FirstOrDefault(p => p.SKU == "FASH004");
+                var sunglasses = products.FirstOrDefault(p => p.SKU == "FASH005");
+                var blazer = products.FirstOrDefault(p => p.SKU == "FASH006");
+                var bookCleanCode = products.FirstOrDefault(p => p.SKU == "BOOK001");
+                var bookDesign = products.FirstOrDefault(p => p.SKU == "BOOK002");
+                var bookPragmatic = products.FirstOrDefault(p => p.SKU == "BOOK003");
+                var notebook = products.FirstOrDefault(p => p.SKU == "STAT001");
+                var pen = products.FirstOrDefault(p => p.SKU == "STAT002");
 
-            // Kiểm tra có đủ sản phẩm không
-            if (iphone == null || samsung == null || macbook == null)
-            {
-                return; // Không đủ sản phẩm để tạo Orders
-            }
+                // Log missing products
+                var missingProducts = new List<string>();
+                if (iphone == null) missingProducts.Add("ELEC001");
+                if (samsung == null) missingProducts.Add("ELEC002");
+                if (macbook == null) missingProducts.Add("ELEC003");
+                if (sonyHeadphone == null) missingProducts.Add("ELEC004");
+                if (ipad == null) missingProducts.Add("ELEC005");
+                if (ps5 == null) missingProducts.Add("ELEC006");
+                if (dellXps == null) missingProducts.Add("ELEC007");
+                if (appleWatch == null) missingProducts.Add("ELEC008");
+                if (nikeShoe == null) missingProducts.Add("FASH001");
+                if (adidasShoe == null) missingProducts.Add("FASH002");
+                if (jeans == null) missingProducts.Add("FASH003");
+                if (jacket == null) missingProducts.Add("FASH004");
+                if (sunglasses == null) missingProducts.Add("FASH005");
+                if (blazer == null) missingProducts.Add("FASH006");
+                if (bookCleanCode == null) missingProducts.Add("BOOK001");
+                if (bookDesign == null) missingProducts.Add("BOOK002");
+                if (bookPragmatic == null) missingProducts.Add("BOOK003");
+                if (notebook == null) missingProducts.Add("STAT001");
+                if (pen == null) missingProducts.Add("STAT002");
+                
+                if (missingProducts.Any())
+                {
+                    System.Diagnostics.Debug.WriteLine($"SeedOrders: Missing products: {string.Join(", ", missingProducts)}");
+                    System.Diagnostics.Debug.WriteLine($"SeedOrders: Available SKUs: {string.Join(", ", products.Select(p => p.SKU ?? "NULL"))}");
+                }
+
+                // Kiểm tra có ít nhất một số products cơ bản không
+                var essentialProducts = new[] { iphone, samsung, macbook, sonyHeadphone, nikeShoe, bookCleanCode };
+                var hasEssentialProducts = essentialProducts.Any(p => p != null);
+                
+                if (!hasEssentialProducts)
+                {
+                    System.Diagnostics.Debug.WriteLine("SeedOrders: Not enough essential products to create orders. Please seed products first.");
+                    return; // Không đủ sản phẩm cơ bản để tạo Orders
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"SeedOrders: Found {products.Count} products, will create orders with available products");
 
             var orders = new List<Order>();
             var today = DateTime.Now;
 
             // --- THÁNG TRƯỚC NỮA (Dữ liệu cũ - Đã hoàn tất) ---
-            orders.Add(CreateOrder(customers[0], today.AddDays(-60), OrderStatus.Paid, new[] { (iphone, 1), (sonyHeadphone, 1) })); // Đơn to
-            orders.Add(CreateOrder(customers[1], today.AddDays(-58), OrderStatus.Paid, new[] { (bookCleanCode, 1), (bookDesign, 1) }));
-            orders.Add(CreateOrder(customers[2], today.AddDays(-55), OrderStatus.Cancelled, new[] { (macbook, 1) })); // Đơn hủy
-            orders.Add(CreateOrder(customers[3], today.AddDays(-57), OrderStatus.Paid, new[] { (nikeShoe, 2), (jeans, 1) }));
-            orders.Add(CreateOrder(customers[4], today.AddDays(-59), OrderStatus.Paid, new[] { (appleWatch, 1) }));
+            var order1 = CreateOrder(customers[0], today.AddDays(-60), OrderStatus.Paid, new[] { (iphone, 1), (sonyHeadphone, 1) }); // Đơn to
+            if (order1 != null) orders.Add(order1);
+            var order2 = CreateOrder(customers[1], today.AddDays(-58), OrderStatus.Paid, new[] { (bookCleanCode, 1), (bookDesign, 1) });
+            if (order2 != null) orders.Add(order2);
+            var order3 = CreateOrder(customers[2], today.AddDays(-55), OrderStatus.Cancelled, new[] { (macbook, 1) }); // Đơn hủy
+            if (order3 != null) orders.Add(order3);
+            var order4 = CreateOrder(customers[3], today.AddDays(-57), OrderStatus.Paid, new[] { (nikeShoe, 2), (jeans, 1) });
+            if (order4 != null) orders.Add(order4);
+            var order5 = CreateOrder(customers[4], today.AddDays(-59), OrderStatus.Paid, new[] { (appleWatch, 1) });
+            if (order5 != null) orders.Add(order5);
 
             // --- THÁNG TRƯỚC (Doanh số tăng) ---
-            orders.Add(CreateOrder(customers[3], today.AddDays(-30), OrderStatus.Paid, new[] { (macbook, 1), (iphone, 1) })); // VIP Customer
-            orders.Add(CreateOrder(customers[4], today.AddDays(-28), OrderStatus.Paid, new[] { (nikeShoe, 2) }));
-            orders.Add(CreateOrder(customers[0], today.AddDays(-25), OrderStatus.Paid, new[] { (bookCleanCode, 5) })); // Mua cho team
-            orders.Add(CreateOrder(customers[1], today.AddDays(-20), OrderStatus.Paid, new[] { (sonyHeadphone, 1) }));
-            orders.Add(CreateOrder(customers[5], today.AddDays(-22), OrderStatus.Paid, new[] { (ipad, 1), (bookPragmatic, 2) }));
-            orders.Add(CreateOrder(customers[2], today.AddDays(-27), OrderStatus.Paid, new[] { (sunglasses, 1), (blazer, 1) }));
-            orders.Add(CreateOrder(customers[0], today.AddDays(-24), OrderStatus.Cancelled, new[] { (ps5, 1) })); // Đơn hủy
+            var order6 = CreateOrder(customers[3], today.AddDays(-30), OrderStatus.Paid, new[] { (macbook, 1), (iphone, 1) }); // VIP Customer
+            if (order6 != null) orders.Add(order6);
+            var order7 = CreateOrder(customers[4], today.AddDays(-28), OrderStatus.Paid, new[] { (nikeShoe, 2) });
+            if (order7 != null) orders.Add(order7);
+            var order8 = CreateOrder(customers[0], today.AddDays(-25), OrderStatus.Paid, new[] { (bookCleanCode, 5) }); // Mua cho team
+            if (order8 != null) orders.Add(order8);
+            var order9 = CreateOrder(customers[1], today.AddDays(-20), OrderStatus.Paid, new[] { (sonyHeadphone, 1) });
+            if (order9 != null) orders.Add(order9);
+            var order10 = CreateOrder(customers[5], today.AddDays(-22), OrderStatus.Paid, new[] { (ipad, 1), (bookPragmatic, 2) });
+            if (order10 != null) orders.Add(order10);
+            var order11 = CreateOrder(customers[2], today.AddDays(-27), OrderStatus.Paid, new[] { (sunglasses, 1), (blazer, 1) });
+            if (order11 != null) orders.Add(order11);
+            var order12 = CreateOrder(customers[0], today.AddDays(-24), OrderStatus.Cancelled, new[] { (ps5, 1) }); // Đơn hủy
+            if (order12 != null) orders.Add(order12);
 
             // --- TUẦN NÀY (Dữ liệu mới - Hỗn hợp trạng thái) ---
             // Đơn 3 ngày trước - Đã thanh toán
-            orders.Add(CreateOrder(customers[0], today.AddDays(-3), OrderStatus.Paid, new[] { (samsung, 1), (appleWatch, 1) }));
+            var order13 = CreateOrder(customers[0], today.AddDays(-3), OrderStatus.Paid, new[] { (samsung, 1), (appleWatch, 1) });
+            if (order13 != null) orders.Add(order13);
             // Đơn 2 ngày trước - Đã thanh toán
-            orders.Add(CreateOrder(customers[1], today.AddDays(-2), OrderStatus.Paid, new[] { (adidasShoe, 1), (jeans, 2) }));
+            var order14 = CreateOrder(customers[1], today.AddDays(-2), OrderStatus.Paid, new[] { (adidasShoe, 1), (jeans, 2) });
+            if (order14 != null) orders.Add(order14);
             // Đơn hôm qua - Đã thanh toán
-            orders.Add(CreateOrder(customers[2], today.AddDays(-1), OrderStatus.Paid, new[] { (iphone, 2) })); 
+            var order15 = CreateOrder(customers[2], today.AddDays(-1), OrderStatus.Paid, new[] { (iphone, 2) });
+            if (order15 != null) orders.Add(order15);
             // Đơn hôm qua - Đã thanh toán (đơn lớn)
-            orders.Add(CreateOrder(customers[5], today.AddDays(-1).AddHours(-5), OrderStatus.Paid, new[] { (ipad, 1), (bookCleanCode, 2), (bookPragmatic, 1) }));
+            var order16 = CreateOrder(customers[5], today.AddDays(-1).AddHours(-5), OrderStatus.Paid, new[] { (ipad, 1), (bookCleanCode, 2), (bookPragmatic, 1) });
+            if (order16 != null) orders.Add(order16);
             // Đơn hôm nay - Mới tạo (Chưa thanh toán)
-            orders.Add(CreateOrder(customers[3], today, OrderStatus.Created, new[] { (macbook, 1), (bookDesign, 1) }));
+            var order17 = CreateOrder(customers[3], today, OrderStatus.Created, new[] { (macbook, 1), (bookDesign, 1) });
+            if (order17 != null) orders.Add(order17);
             // Đơn hôm nay - Đã thanh toán
-            orders.Add(CreateOrder(customers[5], today.AddHours(-2), OrderStatus.Paid, new[] { (nikeShoe, 1), (sonyHeadphone, 1) }));
+            var order18 = CreateOrder(customers[5], today.AddHours(-2), OrderStatus.Paid, new[] { (nikeShoe, 1), (sonyHeadphone, 1) });
+            if (order18 != null) orders.Add(order18);
             // Đơn hôm nay - Đã thanh toán (thời trang)
-            orders.Add(CreateOrder(customers[0], today.AddHours(-3), OrderStatus.Paid, new[] { (sunglasses, 1), (blazer, 1), (jacket, 1) }));
+            var order19 = CreateOrder(customers[0], today.AddHours(-3), OrderStatus.Paid, new[] { (sunglasses, 1), (blazer, 1), (jacket, 1) });
+            if (order19 != null) orders.Add(order19);
             // Đơn hôm nay - Mới tạo
-            orders.Add(CreateOrder(customers[1], today.AddHours(-1), OrderStatus.Created, new[] { (ps5, 1) }));
+            var order20 = CreateOrder(customers[1], today.AddHours(-1), OrderStatus.Created, new[] { (ps5, 1) });
+            if (order20 != null) orders.Add(order20);
             // Đơn hôm nay - Vừa hủy
-            orders.Add(CreateOrder(customers[4], today.AddHours(-1), OrderStatus.Cancelled, new[] { (iphone, 1) }));
+            var order21 = CreateOrder(customers[4], today.AddHours(-1), OrderStatus.Cancelled, new[] { (iphone, 1) });
+            if (order21 != null) orders.Add(order21);
             // Đơn hôm nay - Đã thanh toán (văn phòng phẩm)
-            orders.Add(CreateOrder(customers[2], today.AddHours(-30), OrderStatus.Paid, new[] { (notebook, 5), (pen, 3) }));
+            var order22 = CreateOrder(customers[2], today.AddHours(-30), OrderStatus.Paid, new[] { (notebook, 5), (pen, 3) });
+            if (order22 != null) orders.Add(order22);
             // Đơn hôm nay - Đã thanh toán (điện tử cao cấp)
-            orders.Add(CreateOrder(customers[3], today.AddHours(-20), OrderStatus.Paid, new[] { (dellXps, 1), (sonyHeadphone, 1) }));
+            var order23 = CreateOrder(customers[3], today.AddHours(-20), OrderStatus.Paid, new[] { (dellXps, 1), (sonyHeadphone, 1) });
+            if (order23 != null) orders.Add(order23);
             // Thêm một số đơn nữa để test
-            orders.Add(CreateOrder(customers[5], today.AddDays(-4), OrderStatus.Paid, new[] { (bookCleanCode, 3), (bookDesign, 2), (bookPragmatic, 1) }));
-            orders.Add(CreateOrder(customers[0], today.AddDays(-5), OrderStatus.Paid, new[] { (jacket, 2), (jeans, 3) }));
-            orders.Add(CreateOrder(customers[1], today.AddDays(-6), OrderStatus.Created, new[] { (appleWatch, 1), (sonyHeadphone, 1) }));
-            orders.Add(CreateOrder(customers[2], today.AddDays(-7), OrderStatus.Paid, new[] { (notebook, 10), (pen, 5) }));
+            var order24 = CreateOrder(customers[5], today.AddDays(-4), OrderStatus.Paid, new[] { (bookCleanCode, 3), (bookDesign, 2), (bookPragmatic, 1) });
+            if (order24 != null) orders.Add(order24);
+            var order25 = CreateOrder(customers[0], today.AddDays(-5), OrderStatus.Paid, new[] { (jacket, 2), (jeans, 3) });
+            if (order25 != null) orders.Add(order25);
+            var order26 = CreateOrder(customers[1], today.AddDays(-6), OrderStatus.Created, new[] { (appleWatch, 1), (sonyHeadphone, 1) });
+            if (order26 != null) orders.Add(order26);
+            var order27 = CreateOrder(customers[2], today.AddDays(-7), OrderStatus.Paid, new[] { (notebook, 10), (pen, 5) });
+            if (order27 != null) orders.Add(order27);
 
-            context.Orders.AddRange(orders);
-            context.SaveChanges();
-            
-            // Cập nhật lại tồn kho cho các sản phẩm bán chạy (để test cảnh báo hết hàng)
-            if (iphone != null)
-            {
-                iphone.Quantity = 5;
+                System.Diagnostics.Debug.WriteLine($"SeedOrders: Created {orders.Count} orders in memory");
+                
+                if (orders.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("SeedOrders: WARNING - No orders to save! Check if products are available.");
+                    return;
+                }
+                
+                context.Orders.AddRange(orders);
+                var savedCount = context.SaveChanges();
+                System.Diagnostics.Debug.WriteLine($"SeedOrders: Saved {orders.Count} orders to database (SaveChanges returned {savedCount})");
+                
+                // Verify orders were saved
+                var verifyCount = context.Orders
+                    .Include(o => o.Items)
+                    .Where(o => o.Items.Any())
+                    .Count();
+                System.Diagnostics.Debug.WriteLine($"SeedOrders: Verification - Found {verifyCount} orders with items in database");
+                
+                // Cập nhật lại tồn kho cho các sản phẩm bán chạy (để test cảnh báo hết hàng)
+                if (iphone != null)
+                {
+                    iphone.Quantity = 5;
+                }
+                if (macbook != null)
+                {
+                    macbook.Quantity = 2; // Sắp hết hàng
+                }
+                
+                context.SaveChanges();
+                System.Diagnostics.Debug.WriteLine("SeedOrders: Completed successfully");
             }
-            if (macbook != null)
+            catch (Exception ex)
             {
-                macbook.Quantity = 2; // Sắp hết hàng
+                System.Diagnostics.Debug.WriteLine($"Error in SeedOrders: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                throw;
             }
-            
-            context.SaveChanges();
         }
 
         // --- CÁC HÀM HELPER ---
@@ -245,7 +394,7 @@ namespace Project_MyShop_2025.Core.Data
             return $"https://placehold.co/600x400/{color}/FFF?text={encodedName}";
         }
 
-        private static Order CreateOrder(CustomerInfo customer, DateTime date, OrderStatus status, (Product prod, int qty)[] items)
+        private static Order CreateOrder(CustomerInfo customer, DateTime date, OrderStatus status, (Product? prod, int qty)[] items)
         {
             var order = new Order
             {
@@ -260,6 +409,13 @@ namespace Project_MyShop_2025.Core.Data
             int total = 0;
             foreach (var item in items)
             {
+                // Skip null products
+                if (item.prod == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"CreateOrder: Skipping null product in order for {customer.Name}");
+                    continue;
+                }
+                
                 int lineTotal = item.prod.Price * item.qty;
                 total += lineTotal;
                 order.Items.Add(new OrderItem
@@ -271,6 +427,14 @@ namespace Project_MyShop_2025.Core.Data
                 });
             }
             order.TotalPrice = total;
+            
+            // Only return order if it has at least one item
+            if (order.Items.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"CreateOrder: Order for {customer.Name} has no valid items, returning null");
+                return null!; // Return null order - caller should check
+            }
+            
             return order;
         }
 

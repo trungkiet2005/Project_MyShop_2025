@@ -117,10 +117,26 @@ namespace Project_MyShop_2025
                     // Verify seed
                     var productCount = context.Products.Count();
                     var orderCount = context.Orders.Count();
+                    var ordersWithItems = context.Orders
+                        .Include(o => o.Items)
+                        .Where(o => o.Items.Any())
+                        .Count();
                     var categoryCount = context.Categories.Count();
-                    System.Diagnostics.Debug.WriteLine($"Seeded: {categoryCount} categories, {productCount} products, {orderCount} orders");
+                    System.Diagnostics.Debug.WriteLine($"Seeded: {categoryCount} categories, {productCount} products, {orderCount} total orders, {ordersWithItems} orders with items");
                     System.Diagnostics.Debug.WriteLine($"Database exists final: {System.IO.File.Exists(dbPath)}");
                     System.Diagnostics.Debug.WriteLine($"Database file size: {(System.IO.File.Exists(dbPath) ? new System.IO.FileInfo(dbPath).Length : 0)} bytes");
+                    
+                    // Nếu không có orders với items, thử force seed lại
+                    if (ordersWithItems == 0 && productCount > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine("WARNING: No orders with items found after seed. Attempting to force seed orders...");
+                        await System.Threading.Tasks.Task.Run(() => Project_MyShop_2025.Core.Data.DbSeeder.SeedOrders(context, force: true));
+                        var newOrderCount = context.Orders
+                            .Include(o => o.Items)
+                            .Where(o => o.Items.Any())
+                            .Count();
+                        System.Diagnostics.Debug.WriteLine($"After force seed: {newOrderCount} orders with items");
+                    }
                 }
             }
             catch (Exception ex)
