@@ -39,7 +39,7 @@ namespace Project_MyShop_2025.Views
                         ContentFrame.Navigate(typeof(OrdersPage));
                         break;
                     case "Reports":
-                        // TODO: Navigate to Reports page
+                        ContentFrame.Navigate(typeof(ReportsPage));
                         break;
                 }
             }
