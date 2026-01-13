@@ -40,10 +40,10 @@ namespace Project_MyShop_2025.Views
             await LoadCharts();
         }
 
-        private void ReportsPage_SizeChanged(object sender, SizeChangedEventArgs e)
+        private async void ReportsPage_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             // Redraw charts when window size changes
-            _ = LoadCharts();
+            await LoadCharts();
         }
 
         private async Task LoadCharts()
