@@ -5,6 +5,8 @@ namespace Project_MyShop_2025.Core.Models
 {
     public class ProductImage
     {
+
+
         [Key]
         public int Id { get; set; }
 

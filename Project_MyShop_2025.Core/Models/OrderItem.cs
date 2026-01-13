@@ -7,7 +7,6 @@ namespace Project_MyShop_2025.Core.Models
     {
         [Key]
         public int Id { get; set; }
-
         public int OrderId { get; set; }
         [ForeignKey(nameof(OrderId))]
         public Order? Order { get; set; }
@@ -18,7 +17,7 @@ namespace Project_MyShop_2025.Core.Models
 
         public int Quantity { get; set; }
 
-        public int Price { get; set; } // Unit sale price
+        public int Price { get; set; } // Unit sale price -
         
         public int TotalPrice { get; set; }
     }
