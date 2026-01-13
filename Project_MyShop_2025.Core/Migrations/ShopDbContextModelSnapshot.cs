@@ -146,6 +146,29 @@ namespace Project_MyShop_2025.Core.Migrations
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("Project_MyShop_2025.Core.Models.ProductImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages");
+                });
+
             modelBuilder.Entity("Project_MyShop_2025.Core.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -205,6 +228,17 @@ namespace Project_MyShop_2025.Core.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("Project_MyShop_2025.Core.Models.ProductImage", b =>
+                {
+                    b.HasOne("Project_MyShop_2025.Core.Models.Product", "Product")
+                        .WithMany("ProductImages")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Project_MyShop_2025.Core.Models.Category", b =>
                 {
                     b.Navigation("Products");
@@ -213,6 +247,11 @@ namespace Project_MyShop_2025.Core.Migrations
             modelBuilder.Entity("Project_MyShop_2025.Core.Models.Order", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Project_MyShop_2025.Core.Models.Product", b =>
+                {
+                    b.Navigation("ProductImages");
                 });
 #pragma warning restore 612, 618
         }
