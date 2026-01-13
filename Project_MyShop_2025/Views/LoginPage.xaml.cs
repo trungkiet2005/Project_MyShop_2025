@@ -20,6 +20,11 @@ namespace Project_MyShop_2025.Views
         {
             this.InitializeComponent();
             LoadVersionInfo();
+            this.Loaded += LoginPage_Loaded;
+        }
+
+        private void LoginPage_Loaded(object sender, RoutedEventArgs e)
+        {
             CheckRememberedUser();
         }
 
@@ -159,10 +164,8 @@ namespace Project_MyShop_2025.Views
 
         private void NavigateToMain()
         {
-            // Navigate to Dashboard.
-            // CAUTION: If using shell, we might just want to change content.
-            // But we have RootFrame in MainWindow, so straightforward navigation works.
-            Frame.Navigate(typeof(DashboardPage));
+            // Navigate to Shell which contains the sidebar and dashboard.
+            Frame.Navigate(typeof(ShellPage));
         }
 
         private async void ShowError(string message, bool isError = true)

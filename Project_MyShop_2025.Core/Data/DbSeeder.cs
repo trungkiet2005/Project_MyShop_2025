@@ -93,55 +93,81 @@ namespace Project_MyShop_2025.Core.Data
                 var random = new Random();
                 var allProducts = context.Products.ToList();
                 
-                // Create 10 sample orders
-                for (int i = 0; i < 10; i++)
+                // Create orders for the past 30 days including today
+                for (int i = 0; i < 30; i++)
                 {
-                    var order = new Order
+                    DateTime orderDate;
+                    int ordersForDay;
+                    
+                    // More orders for recent days
+                    if (i == 0) // Today
                     {
-                        CustomerName = $"Customer {i + 1}",
-                        CustomerPhone = $"090{random.Next(1000000, 9999999)}",
-                        CustomerAddress = $"Address {i + 1}",
-                        CreatedAt = DateTime.Now.AddDays(-random.Next(0, 30)) // Random date within last 30 days
-                    };
-
-                    // Add 1-3 random items to each order
-                    int itemCount = random.Next(1, 4);
-                    var orderItems = new List<OrderItem>();
-                    int orderTotal = 0;
-
-                    for (int j = 0; j < itemCount; j++)
+                        orderDate = DateTime.Now;
+                        ordersForDay = random.Next(3, 6);
+                    }
+                    else if (i == 1) // Yesterday
                     {
-                        var product = allProducts[random.Next(allProducts.Count)];
-                        int quantity = random.Next(1, 5);
-                        int itemTotal = product.Price * quantity;
-                        orderTotal += itemTotal;
-
-                        orderItems.Add(new OrderItem
-                        {
-                            ProductId = product.Id,
-                            Quantity = quantity,
-                            Price = product.Price,
-                            TotalPrice = itemTotal
-                        });
+                        orderDate = DateTime.Now.AddDays(-1);
+                        ordersForDay = random.Next(2, 5);
+                    }
+                    else
+                    {
+                        orderDate = DateTime.Now.AddDays(-i);
+                        ordersForDay = random.Next(1, 4);
                     }
 
-                    order.TotalPrice = orderTotal;
-                    order.Items = orderItems;
-                    context.Orders.Add(order);
+                    for (int j = 0; j < ordersForDay; j++)
+                    {
+                        var order = new Order
+                        {
+                            CustomerName = $"Customer {random.Next(1, 100)}",
+                            CustomerPhone = $"090{random.Next(1000000, 9999999)}",
+                            CustomerAddress = $"Address {random.Next(1, 50)}",
+                            CreatedAt = orderDate.AddHours(random.Next(8, 20)).AddMinutes(random.Next(0, 60))
+                        };
+
+                        // Add 1-4 random items to each order
+                        int itemCount = random.Next(1, 5);
+                        var orderItems = new List<OrderItem>();
+                        int orderTotal = 0;
+
+                        for (int k = 0; k < itemCount; k++)
+                        {
+                            var product = allProducts[random.Next(allProducts.Count)];
+                            int quantity = random.Next(1, 4);
+                            int itemTotal = product.Price * quantity;
+                            orderTotal += itemTotal;
+
+                            orderItems.Add(new OrderItem
+                            {
+                                ProductId = product.Id,
+                                Quantity = quantity,
+                                Price = product.Price,
+                                TotalPrice = itemTotal
+                            });
+                        }
+
+                        order.TotalPrice = orderTotal;
+                        order.Items = orderItems;
+                        context.Orders.Add(order);
+                    }
                 }
 
                 context.SaveChanges();
             }
 
-            // Add some low-stock products for testing
-            var lowStockProduct1 = context.Products.FirstOrDefault(p => p.SKU == "ELEC007");
-            if (lowStockProduct1 != null) lowStockProduct1.Quantity = 3;
+            // Update some products to have low stock for testing
+            var productsToUpdate = new[] { "ELEC007", "BOOK003", "CAM001", "CLOTH001" };
+            var quantities = new[] { 3, 2, 1, 4 };
             
-            var lowStockProduct2 = context.Products.FirstOrDefault(p => p.SKU == "BOOK003");
-            if (lowStockProduct2 != null) lowStockProduct2.Quantity = 2;
-
-            var lowStockProduct3 = context.Products.FirstOrDefault(p => p.SKU == "CAM001");
-            if (lowStockProduct3 != null) lowStockProduct3.Quantity = 1;
+            for (int i = 0; i < productsToUpdate.Length; i++)
+            {
+                var product = context.Products.FirstOrDefault(p => p.SKU == productsToUpdate[i]);
+                if (product != null)
+                {
+                    product.Quantity = quantities[i];
+                }
+            }
 
             context.SaveChanges();
         }

@@ -7,105 +7,137 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="#F8F9FA">
 
-    <Grid Padding="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer>
+        <Grid Padding="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="Dashboard" FontSize="32" FontWeight="Bold"/>
-                <TextBlock Text="Sales Management Overview" FontSize="14" Foreground="Gray"/>
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,24">
+                <TextBlock Text="Dashboard" FontSize="32" FontWeight="Bold" Foreground="#1A1A1A"/>
+                <TextBlock Text="Sales Management Overview" FontSize="14" Foreground="#666666" Margin="0,4,0,0"/>
             </StackPanel>
-            <Button Grid.Column="1" Content="Logout" Click="Logout_Click" VerticalAlignment="Center"/>
-        </Grid>
 
-        <!-- KPI Cards -->
-        <GridView Grid.Row="1" Margin="0,0,0,20" SelectionMode="None">
-            <GridView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="4"/>
-                </ItemsPanelTemplate>
-            </GridView.ItemsPanel>
-            
-            <!-- Total Products -->
-            <Border Background="#E3F2FD" CornerRadius="8" Padding="20" Width="240" Height="120" Margin="0,0,10,0">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Total Products" FontSize="14" Foreground="#1976D2"/>
-                    <TextBlock x:Name="TotalProductsText" Text="0" FontSize="36" FontWeight="Bold" Foreground="#0D47A1"/>
-                    <TextBlock Text="In catalog" FontSize="12" Foreground="Gray"/>
-                </StackPanel>
-            </Border>
+            <!-- KPI Cards -->
+            <Grid Grid.Row="1" Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Total Revenue Today -->
-            <Border Background="#FFF3E0" CornerRadius="8" Padding="20" Width="240" Height="120" Margin="0,0,10,0">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Today's Revenue" FontSize="14" Foreground="#F57C00"/>
-                    <TextBlock x:Name="TodayRevenueText" Text="₫0" FontSize="36" FontWeight="Bold" Foreground="#E65100"/>
-                    <TextBlock x:Name="TodayRevenueSubText" Text="+0% from last week" FontSize="12" Foreground="Gray"/>
-                </StackPanel>
-            </Border>
+                <!-- Total Products -->
+                <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Total Products" FontSize="13" Foreground="#666666"/>
+                            <FontIcon Grid.Column="1" Glyph="&#xE8F1;" FontSize="20" Foreground="#2196F3"/>
+                        </Grid>
+                        <TextBlock x:Name="TotalProductsText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
+                        <TextBlock Text="In catalog" FontSize="11" Foreground="#999999"/>
+                    </StackPanel>
+                </Border>
 
-            <!-- Orders Today -->
-            <Border Background="#E8F5E9" CornerRadius="8" Padding="20" Width="240" Height="120" Margin="0,0,10,0">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Orders Today" FontSize="14" Foreground="#388E3C"/>
-                    <TextBlock x:Name="TodayOrdersText" Text="0" FontSize="36" FontWeight="Bold" Foreground="#1B5E20"/>
-                    <TextBlock Text="New orders" FontSize="12" Foreground="Gray"/>
-                </StackPanel>
-            </Border>
+                <!-- Today's Revenue -->
+                <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Today's Revenue" FontSize="13" Foreground="#666666"/>
+                            <FontIcon Grid.Column="1" Glyph="&#xE8EC;" FontSize="20" Foreground="#4CAF50"/>
+                        </Grid>
+                        <TextBlock x:Name="TodayRevenueText" Text="₫0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
+                        <TextBlock x:Name="TodayRevenueSubText" Text="+0 from yesterday" FontSize="11" Foreground="#4CAF50"/>
+                    </StackPanel>
+                </Border>
 
-            <!-- Low Stock Alert -->
-            <Border Background="#FCE4EC" CornerRadius="8" Padding="20" Width="240" Height="120">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Low Stock Alert" FontSize="14" Foreground="#C2185B"/>
-                    <TextBlock x:Name="LowStockText" Text="0" FontSize="36" FontWeight="Bold" Foreground="#880E4F"/>
-                    <TextBlock Text="Items below 5 units" FontSize="12" Foreground="Gray"/>
-                </StackPanel>
-            </Border>
-        </GridView>
+                <!-- Orders Today -->
+                <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20" Margin="0,0,12,0" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Orders Today" FontSize="13" Foreground="#666666"/>
+                            <FontIcon Grid.Column="1" Glyph="&#xE7BF;" FontSize="20" Foreground="#FF9800"/>
+                        </Grid>
+                        <TextBlock x:Name="TodayOrdersText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
+                        <TextBlock Text="New orders" FontSize="11" Foreground="#999999"/>
+                    </StackPanel>
+                </Border>
 
-        <!-- Content Area -->
-        <ScrollViewer Grid.Row="2">
-            <Grid>
+                <!-- Low Stock Alert -->
+                <Border Grid.Column="3" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Low Stock Alert" FontSize="13" Foreground="#666666"/>
+                            <FontIcon Grid.Column="1" Glyph="&#xE7BA;" FontSize="20" Foreground="#F44336"/>
+                        </Grid>
+                        <TextBlock x:Name="LowStockText" Text="0" FontSize="28" FontWeight="Bold" Foreground="#1A1A1A"/>
+                        <TextBlock Text="Items below 5 units" FontSize="11" Foreground="#F44336"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Content Area -->
+            <Grid Grid.Row="2">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Top Row: Low Stock + Best Sellers -->
-                <Grid Grid.Row="0" Margin="0,0,0,20">
+                <!-- Row 1: Low Stock + Best Sellers -->
+                <Grid Grid.Row="0" Margin="0,0,0,24">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="24"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Low Stock Products -->
-                    <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="⚠️ Low Stock Products" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Products with less than 5 units" FontSize="12" Foreground="Gray"/>
-                            <ListView x:Name="LowStockList" MaxHeight="300" SelectionMode="None">
+                    <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
+                        <StackPanel Spacing="16">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="⚠️ Low Stock Products" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
+                                <TextBlock Text="Products with less than 5 units" FontSize="12" Foreground="#999999"/>
+                            </StackPanel>
+                            <ListView x:Name="LowStockList" MaxHeight="320" SelectionMode="None">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid Padding="5">
+                                        <Grid Padding="8,12" Background="Transparent">
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="48"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                                            <Border Grid.Column="1" Background="#FFEBEE" CornerRadius="4" Padding="8,4">
-                                                <TextBlock Text="{Binding Quantity}" Foreground="#C62828" FontWeight="SemiBold"/>
+                                            <Border Grid.Column="0" Width="40" Height="40" CornerRadius="8" Background="#F5F5F5">
+                                                <Image Source="{Binding Image}" Stretch="UniformToFill"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Medium" Foreground="#1A1A1A"/>
+                                                <TextBlock Text="{Binding SKU}" FontSize="11" Foreground="#999999"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="2" Background="#FFEBEE" CornerRadius="6" Padding="12,6" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Quantity}" Foreground="#D32F2F" FontWeight="SemiBold" FontSize="13"/>
                                             </Border>
                                         </Grid>
                                     </DataTemplate>
@@ -115,21 +147,26 @@
                     </Border>
 
                     <!-- Best Sellers -->
-                    <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="🔥 Best Selling Products" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Top 5 products by sales" FontSize="12" Foreground="Gray"/>
-                            <ListView x:Name="BestSellersList" MaxHeight="300" SelectionMode="None">
+                    <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
+                        <StackPanel Spacing="16">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="🔥 Best Selling Products" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
+                                <TextBlock Text="Top 5 products by sales" FontSize="12" Foreground="#999999"/>
+                            </StackPanel>
+                            <ListView x:Name="BestSellersList" MaxHeight="320" SelectionMode="None">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid Padding="5">
+                                        <Grid Padding="8,12" Background="Transparent">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding ProductName}" VerticalAlignment="Center"/>
-                                            <Border Grid.Column="1" Background="#E8F5E9" CornerRadius="4" Padding="8,4">
-                                                <TextBlock Text="{Binding TotalSold}" Foreground="#2E7D32" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="0" Text="{Binding ProductName}" VerticalAlignment="Center" FontWeight="Medium" Foreground="#1A1A1A"/>
+                                            <Border Grid.Column="1" Background="#E8F5E9" CornerRadius="6" Padding="12,6">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="{Binding TotalSold}" Foreground="#2E7D32" FontWeight="SemiBold" FontSize="13"/>
+                                                    <TextBlock Text="sold" Foreground="#2E7D32" FontSize="11" VerticalAlignment="Center"/>
+                                                </StackPanel>
                                             </Border>
                                         </Grid>
                                     </DataTemplate>
@@ -139,25 +176,58 @@
                     </Border>
                 </Grid>
 
-                <!-- Bottom Row: Recent Orders -->
-                <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="📋 Recent Orders" FontSize="18" FontWeight="SemiBold"/>
-                        <TextBlock Text="Last 3 orders" FontSize="12" Foreground="Gray"/>
-                        <ListView x:Name="RecentOrdersList" MaxHeight="250" SelectionMode="None">
+                <!-- Row 2: Revenue Chart -->
+                <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,24">
+                    <StackPanel Spacing="20">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="📈 Revenue Trends" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
+                            <TextBlock Text="Daily revenue for current month" FontSize="12" Foreground="#999999"/>
+                        </StackPanel>
+                        
+                        <Grid Height="280" Margin="0,8,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Border Grid.Row="0" Background="#FAFAFA" CornerRadius="8">
+                                <Canvas x:Name="RevenueChart"/>
+                            </Border>
+                            
+                            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">
+                                <StackPanel x:Name="ChartLabels" Orientation="Horizontal"/>
+                            </ScrollViewer>
+                        </Grid>
+                        
+                        <Border Background="#F5F5F5" CornerRadius="8" Padding="16,12">
+                            <TextBlock x:Name="ChartSummaryText" Text="Loading chart data..." FontSize="12" Foreground="#666666" HorizontalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Row 3: Recent Orders -->
+                <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel Spacing="16">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="📋 Recent Orders" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
+                            <TextBlock Text="Last 3 orders" FontSize="12" Foreground="#999999"/>
+                        </StackPanel>
+                        <ListView x:Name="RecentOrdersList" MaxHeight="280" SelectionMode="None">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Padding="10,5">
+                                    <Grid Padding="12,16" Background="Transparent">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="100"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="120"/>
-                                            <ColumnDefinition Width="150"/>
+                                            <ColumnDefinition Width="140"/>
+                                            <ColumnDefinition Width="160"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Id}" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding CustomerName}" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding CreatedAt}" Foreground="Gray" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding TotalPrice}" FontWeight="SemiBold" Foreground="#1976D2" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="0" Background="#F5F5F5" CornerRadius="6" Padding="10,6" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding Id}" FontWeight="SemiBold" Foreground="#1A1A1A" FontSize="13"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="1" Text="{Binding CustomerName}" VerticalAlignment="Center" Foreground="#1A1A1A" Margin="12,0,0,0"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding CreatedAt}" Foreground="#999999" VerticalAlignment="Center" FontSize="12"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding TotalPrice}" FontWeight="SemiBold" Foreground="#2196F3" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="15"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
@@ -165,6 +235,6 @@
                     </StackPanel>
                 </Border>
             </Grid>
-        </ScrollViewer>
-    </Grid>
+        </Grid>
+    </ScrollViewer>
 </Page>
