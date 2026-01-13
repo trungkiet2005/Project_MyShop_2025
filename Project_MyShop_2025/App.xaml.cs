@@ -66,6 +66,13 @@ namespace Project_MyShop_2025
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            using (var scope = Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<Project_MyShop_2025.Core.Data.ShopDbContext>();
+                // context.Database.Migrate(); // Ensure database is migrated
+                Project_MyShop_2025.Core.Data.DbSeeder.Seed(context);
+            }
+
             _window = Services.GetService<MainWindow>();
             _window.Activate();
         }
