@@ -29,5 +29,8 @@ namespace Project_MyShop_2025.Core.Models
 
         [ForeignKey(nameof(CategoryId))]
         public Category? Category { get; set; }
+
+        // Navigation property for multiple images
+        public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
     }
 }
