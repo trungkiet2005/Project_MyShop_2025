@@ -139,30 +139,25 @@ namespace Project_MyShop_2025.Core.Data
             var allProducts = context.Products.ToList();
             var productImages = new List<ProductImage>();
 
-            // Placeholder image URLs - in production, these would be actual product images
-            var placeholderImages = new[]
-            {
-                "ms-appx:///Assets/StoreLogo.png",
-                "ms-appx:///Assets/Square44x44Logo.png",
-                "ms-appx:///Assets/Wide310x150Logo.png"
-            };
-
             foreach (var product in allProducts)
             {
-                // Add 3-5 images per product
+                // Add 3-5 images per product using placeholder image service
                 int imageCount = new Random(product.Id).Next(3, 6);
+                var mainImageUrl = $"https://picsum.photos/400/400?random={product.Id}";
+                
                 for (int i = 0; i < imageCount; i++)
                 {
+                    var imageUrl = $"https://picsum.photos/400/400?random={product.Id * 100 + i}";
                     productImages.Add(new ProductImage
                     {
                         ProductId = product.Id,
-                        ImagePath = placeholderImages[i % placeholderImages.Length],
+                        ImagePath = imageUrl,
                         DisplayOrder = i + 1
                     });
                 }
 
                 // Also set the main image
-                product.Image = placeholderImages[0];
+                product.Image = mainImageUrl;
             }
 
             context.ProductImages.AddRange(productImages);
