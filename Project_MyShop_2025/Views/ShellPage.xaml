@@ -25,6 +25,11 @@
                 <NavigationViewItem Content="Products" Tag="Products" Icon="Shop"/>
                 <NavigationViewItem Content="Orders" Tag="Orders" Icon="List"/>
                 <NavigationViewItem Content="Reports" Tag="Reports" Icon="Document"/>
+                <NavigationViewItem Content="AI Assistant" Tag="Chatbot">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8EA;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <!-- User Profile + Logout in PaneFooter -->

@@ -57,6 +57,9 @@ namespace Project_MyShop_2025.Views
                     case "Reports":
                         ContentFrame.Navigate(typeof(ReportsPage));
                         break;
+                    case "Chatbot":
+                        ContentFrame.Navigate(typeof(ChatbotPage));
+                        break;
                 }
             }
             else if (args.IsSettingsSelected)
