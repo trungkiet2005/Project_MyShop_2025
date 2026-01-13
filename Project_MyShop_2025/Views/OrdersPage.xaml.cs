@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Markup;
 using Project_MyShop_2025.Core.Data;
 using Project_MyShop_2025.Core.Models;
 using System;
@@ -30,7 +31,8 @@ namespace Project_MyShop_2025.Views
             this.InitializeComponent();
             
             var optionsBuilder = new DbContextOptionsBuilder<ShopDbContext>();
-            optionsBuilder.UseSqlite("Data Source=myshop.db");
+            var connectionString = Project_MyShop_2025.Core.Data.DatabasePathHelper.GetConnectionString();
+            optionsBuilder.UseSqlite(connectionString);
             _context = new ShopDbContext(optionsBuilder.Options);
 
             this.Loaded += OrdersPage_Loaded;
@@ -477,27 +479,35 @@ namespace Project_MyShop_2025.Views
             var productsList = new ListView { Header = "Select Products", MaxHeight = 300, SelectionMode = Microsoft.UI.Xaml.Controls.ListViewSelectionMode.Multiple };
             var products = await _context.Products.ToListAsync();
             productsList.ItemsSource = products;
+            
+            // Set ItemTemplate to display product names
+            var xaml = @"<DataTemplate xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">
+                <TextBlock Text=""{Binding Name}"" Margin=""8,4,0,4"" VerticalAlignment=""Center""/>
+            </DataTemplate>";
+            productsList.ItemTemplate = (DataTemplate)XamlReader.Load(xaml);
 
             var quantityBox = new TextBox { Header = "Quantity", Text = "1", Margin = new Thickness(0, 8, 0, 0) };
             var priceBox = new TextBox { Header = "Unit Price", Text = "0", Margin = new Thickness(0, 8, 0, 0) };
 
             var selectedProducts = new List<(Product product, int quantity, int price)>();
 
-            productsList.SelectionChanged += (s, e) =>
-            {
-                // Handle product selection
-            };
-
             var addItemButton = new Button { Content = "Add Item", Margin = new Thickness(0, 8, 0, 0) };
             var itemsListView = new ListView { Header = "Order Items", MaxHeight = 200 };
 
             addItemButton.Click += (s, e) =>
             {
-                if (productsList.SelectedItem is Product selectedProduct)
+                if (productsList.SelectedItems != null && productsList.SelectedItems.Count > 0)
                 {
-                    var qty = int.TryParse(quantityBox.Text, out int q) ? q : 1;
-                    var price = int.TryParse(priceBox.Text, out int p) ? p : selectedProduct.Price;
-                    selectedProducts.Add((selectedProduct, qty, price));
+                    foreach (Product selectedProduct in productsList.SelectedItems)
+                    {
+                        // Check if product already added
+                        if (!selectedProducts.Any(sp => sp.product.Id == selectedProduct.Id))
+                        {
+                            var qty = int.TryParse(quantityBox.Text, out int q) ? q : 1;
+                            var price = int.TryParse(priceBox.Text, out int p) ? p : selectedProduct.Price;
+                            selectedProducts.Add((selectedProduct, qty, price));
+                        }
+                    }
                     itemsListView.ItemsSource = selectedProducts.Select(sp => $"{sp.product.Name} x{sp.quantity} @ ₫{sp.price:N0}").ToList();
                 }
             };

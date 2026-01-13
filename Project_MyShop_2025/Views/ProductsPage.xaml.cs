@@ -30,7 +30,8 @@ namespace Project_MyShop_2025.Views
             this.InitializeComponent();
             
             var optionsBuilder = new DbContextOptionsBuilder<ShopDbContext>();
-            optionsBuilder.UseSqlite("Data Source=myshop.db");
+            var connectionString = Project_MyShop_2025.Core.Data.DatabasePathHelper.GetConnectionString();
+            optionsBuilder.UseSqlite(connectionString);
             _context = new ShopDbContext(optionsBuilder.Options);
 
             this.Loaded += ProductsPage_Loaded;

@@ -8,8 +8,8 @@ namespace Project_MyShop_2025.Core.Data
         public ShopDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ShopDbContext>();
-            optionsBuilder.UseSqlite("Data Source=myshop.db");
-
+            var connectionString = DatabasePathHelper.GetConnectionString();
+            optionsBuilder.UseSqlite(connectionString);
 
             return new ShopDbContext(optionsBuilder.Options);
         }
