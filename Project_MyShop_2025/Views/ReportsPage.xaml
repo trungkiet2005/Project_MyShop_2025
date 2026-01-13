@@ -83,7 +83,7 @@
                             </Grid.RowDefinitions>
                             
                             <Border Grid.Row="0" Background="#FAFAFA" CornerRadius="8">
-                                <Canvas x:Name="ProductSalesChart"/>
+                                <Canvas x:Name="ProductSalesChart" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                             </Border>
                             
                             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">
@@ -112,7 +112,7 @@
                             </Grid.RowDefinitions>
                             
                             <Border Grid.Row="0" Background="#FAFAFA" CornerRadius="8">
-                                <Canvas x:Name="RevenueProfitChart"/>
+                                <Canvas x:Name="RevenueProfitChart" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                             </Border>
                             
                             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">

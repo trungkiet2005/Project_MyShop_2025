@@ -32,18 +32,22 @@ namespace Project_MyShop_2025.Views
 
         private async void ReportsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            // Set default date range to last 30 days
+            // Set default date range from start of current month to today
             _toDate = DateTime.Now.Date;
-            _fromDate = _toDate.Value.AddDays(-30);
+            _fromDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
             FromDatePicker.Date = _fromDate;
             ToDatePicker.Date = _toDate;
 
+            // Wait for layout to complete before loading charts
+            this.UpdateLayout();
+            await Task.Delay(100);
             await LoadCharts();
         }
 
         private async void ReportsPage_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            // Redraw charts when window size changes
+            // Redraw charts when window size changes (with delay to ensure layout is updated)
+            await Task.Delay(100);
             await LoadCharts();
         }
 
@@ -73,41 +77,76 @@ namespace Project_MyShop_2025.Views
         {
             if (!_fromDate.HasValue || !_toDate.HasValue) return;
 
-            var orders = await _context.Orders
-                .Include(o => o.Items)
-                    .ThenInclude(i => i.Product)
-                .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
-                .ToListAsync();
-
-            // Group sales by period
-            var salesData = new Dictionary<string, int>();
-            
-            foreach (var order in orders)
+            try
             {
-                string periodKey = GetPeriodKey(order.CreatedAt);
+                // Update layout first
+                ProductSalesChart.UpdateLayout();
+                await Task.Delay(50); // Small delay to ensure layout is complete
+
+                var orders = await _context.Orders
+                    .Include(o => o.Items)
+                        .ThenInclude(i => i.Product)
+                    .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
+                    .ToListAsync();
+
+                // Group sales by period
+                var salesData = new Dictionary<string, int>();
                 
-                foreach (var item in order.Items)
+                foreach (var order in orders)
                 {
-                    if (!salesData.ContainsKey(periodKey))
-                        salesData[periodKey] = 0;
-                    salesData[periodKey] += item.Quantity;
+                    string periodKey = GetPeriodKey(order.CreatedAt);
+                    
+                    foreach (var item in order.Items)
+                    {
+                        if (!salesData.ContainsKey(periodKey))
+                            salesData[periodKey] = 0;
+                        salesData[periodKey] += item.Quantity;
+                    }
                 }
-            }
 
-            // Sort by date
-            var sortedKeys = salesData.Keys.OrderBy(k => k).ToList();
-            if (!sortedKeys.Any())
-            {
-                ProductSalesSummaryText.Text = "No sales data for selected period";
-                return;
-            }
+                // Sort by date
+                var sortedKeys = salesData.Keys.OrderBy(k => k).ToList();
+                if (!sortedKeys.Any())
+                {
+                    ProductSalesSummaryText.Text = "No sales data for selected period";
+                    ProductSalesChart.Children.Clear();
+                    ProductSalesLabels.Children.Clear();
+                    return;
+                }
 
-            // Clear previous chart
-            ProductSalesChart.Children.Clear();
-            ProductSalesLabels.Children.Clear();
+                // Clear previous chart
+                ProductSalesChart.Children.Clear();
+                ProductSalesLabels.Children.Clear();
 
-            double chartWidth = ProductSalesChart.ActualWidth > 0 ? ProductSalesChart.ActualWidth : 1000;
-            double chartHeight = ProductSalesChart.ActualHeight > 0 ? ProductSalesChart.ActualHeight : 280;
+                // Get actual dimensions from parent Border or Grid
+                double chartWidth = 0;
+                double chartHeight = 0;
+                
+                var parentBorder = ProductSalesChart.Parent as FrameworkElement;
+                if (parentBorder != null)
+                {
+                    chartWidth = parentBorder.ActualWidth;
+                    chartHeight = parentBorder.ActualHeight;
+                    
+                    // If Border doesn't have size, try to get from Grid parent
+                    if (chartWidth <= 0 || chartHeight <= 0)
+                    {
+                        var gridParent = parentBorder.Parent as FrameworkElement;
+                        if (gridParent != null)
+                        {
+                            chartWidth = gridParent.ActualWidth > 0 ? gridParent.ActualWidth : 1000;
+                            chartHeight = gridParent.ActualHeight > 0 ? gridParent.ActualHeight : 300;
+                        }
+                    }
+                }
+                
+                // Fallback values if still no size
+                if (chartWidth <= 0) chartWidth = 1000;
+                if (chartHeight <= 0) chartHeight = 300;
+
+                // Set explicit size on canvas to ensure it has dimensions
+                ProductSalesChart.Width = chartWidth;
+                ProductSalesChart.Height = chartHeight;
 
             int maxQuantity = salesData.Values.Max();
             if (maxQuantity == 0) maxQuantity = 1;
@@ -178,57 +217,98 @@ namespace Project_MyShop_2025.Views
                 }
             }
 
-            int totalSales = salesData.Values.Sum();
-            ProductSalesSummaryText.Text = $"Total products sold: {totalSales} units over {sortedKeys.Count} {_periodType.ToLower()} period(s)";
+                int totalSales = salesData.Values.Sum();
+                ProductSalesSummaryText.Text = $"Total products sold: {totalSales} units over {sortedKeys.Count} {_periodType.ToLower()} period(s)";
+            }
+            catch (Exception ex)
+            {
+                ProductSalesSummaryText.Text = $"Error loading chart: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Error in DrawProductSalesChart: {ex}");
+            }
         }
 
         private async Task DrawRevenueProfitChart()
         {
             if (!_fromDate.HasValue || !_toDate.HasValue) return;
 
-            var orders = await _context.Orders
-                .Include(o => o.Items)
-                    .ThenInclude(i => i.Product)
-                .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
-                .ToListAsync();
-
-            // Calculate revenue and profit by period
-            var revenueData = new Dictionary<string, int>();
-            var profitData = new Dictionary<string, int>();
-
-            foreach (var order in orders)
+            try
             {
-                string periodKey = GetPeriodKey(order.CreatedAt);
-                
-                if (!revenueData.ContainsKey(periodKey))
-                {
-                    revenueData[periodKey] = 0;
-                    profitData[periodKey] = 0;
-                }
+                // Update layout first
+                RevenueProfitChart.UpdateLayout();
+                await Task.Delay(50); // Small delay to ensure layout is complete
 
-                foreach (var item in order.Items)
+                var orders = await _context.Orders
+                    .Include(o => o.Items)
+                        .ThenInclude(i => i.Product)
+                    .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
+                    .ToListAsync();
+
+                // Calculate revenue and profit by period
+                var revenueData = new Dictionary<string, int>();
+                var profitData = new Dictionary<string, int>();
+
+                foreach (var order in orders)
                 {
-                    revenueData[periodKey] += item.TotalPrice;
+                    string periodKey = GetPeriodKey(order.CreatedAt);
                     
-                    // Calculate profit: Revenue - (ImportPrice * Quantity)
-                    int importCost = (item.Product?.ImportPrice ?? 0) * item.Quantity;
-                    profitData[periodKey] += item.TotalPrice - importCost;
+                    if (!revenueData.ContainsKey(periodKey))
+                    {
+                        revenueData[periodKey] = 0;
+                        profitData[periodKey] = 0;
+                    }
+
+                    foreach (var item in order.Items)
+                    {
+                        revenueData[periodKey] += item.TotalPrice;
+                        
+                        // Calculate profit: Revenue - (ImportPrice * Quantity)
+                        int importCost = (item.Product?.ImportPrice ?? 0) * item.Quantity;
+                        profitData[periodKey] += item.TotalPrice - importCost;
+                    }
                 }
-            }
 
-            var sortedKeys = revenueData.Keys.OrderBy(k => k).ToList();
-            if (!sortedKeys.Any())
-            {
-                RevenueProfitSummaryText.Text = "No revenue data for selected period";
-                return;
-            }
+                var sortedKeys = revenueData.Keys.OrderBy(k => k).ToList();
+                if (!sortedKeys.Any())
+                {
+                    RevenueProfitSummaryText.Text = "No revenue data for selected period";
+                    RevenueProfitChart.Children.Clear();
+                    RevenueProfitLabels.Children.Clear();
+                    return;
+                }
 
-            // Clear previous chart
-            RevenueProfitChart.Children.Clear();
-            RevenueProfitLabels.Children.Clear();
+                // Clear previous chart
+                RevenueProfitChart.Children.Clear();
+                RevenueProfitLabels.Children.Clear();
 
-            double chartWidth = RevenueProfitChart.ActualWidth > 0 ? RevenueProfitChart.ActualWidth : 1000;
-            double chartHeight = RevenueProfitChart.ActualHeight > 0 ? RevenueProfitChart.ActualHeight : 280;
+                // Get actual dimensions from parent Border or Grid
+                double chartWidth = 0;
+                double chartHeight = 0;
+                
+                var parentBorder = RevenueProfitChart.Parent as FrameworkElement;
+                if (parentBorder != null)
+                {
+                    chartWidth = parentBorder.ActualWidth;
+                    chartHeight = parentBorder.ActualHeight;
+                    
+                    // If Border doesn't have size, try to get from Grid parent
+                    if (chartWidth <= 0 || chartHeight <= 0)
+                    {
+                        var gridParent = parentBorder.Parent as FrameworkElement;
+                        if (gridParent != null)
+                        {
+                            chartWidth = gridParent.ActualWidth > 0 ? gridParent.ActualWidth : 1000;
+                            chartHeight = gridParent.ActualHeight > 0 ? gridParent.ActualHeight : 300;
+                        }
+                    }
+                }
+                
+                // Fallback values if still no size
+                if (chartWidth <= 0) chartWidth = 1000;
+                if (chartHeight <= 0) chartHeight = 300;
+
+                // Set explicit size on canvas to ensure it has dimensions
+                RevenueProfitChart.Width = chartWidth;
+                RevenueProfitChart.Height = chartHeight;
 
             int maxValue = Math.Max(revenueData.Values.Max(), profitData.Values.Any() ? profitData.Values.Max() : 0);
             if (maxValue == 0) maxValue = 1;
@@ -291,9 +371,15 @@ namespace Project_MyShop_2025.Views
                 }
             }
 
-            int totalRevenue = revenueData.Values.Sum();
-            int totalProfit = profitData.Values.Sum();
-            RevenueProfitSummaryText.Text = $"Total Revenue: ₫{totalRevenue:N0} | Total Profit: ₫{totalProfit:N0} | Profit Margin: {(totalRevenue > 0 ? (totalProfit * 100.0 / totalRevenue):0):F1}%";
+                int totalRevenue = revenueData.Values.Sum();
+                int totalProfit = profitData.Values.Sum();
+                RevenueProfitSummaryText.Text = $"Total Revenue: ₫{totalRevenue:N0} | Total Profit: ₫{totalProfit:N0} | Profit Margin: {(totalRevenue > 0 ? (totalProfit * 100.0 / totalRevenue):0):F1}%";
+            }
+            catch (Exception ex)
+            {
+                RevenueProfitSummaryText.Text = $"Error loading chart: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Error in DrawRevenueProfitChart: {ex}");
+            }
         }
 
         private string GetPeriodKey(DateTime date)
