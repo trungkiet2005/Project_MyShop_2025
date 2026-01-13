@@ -28,7 +28,7 @@ namespace Project_MyShop_2025
     /// </summary>
     public partial class App : Application
     {
-        private Window? _window;
+        public Window? Window { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -73,8 +73,11 @@ namespace Project_MyShop_2025
                 Project_MyShop_2025.Core.Data.DbSeeder.Seed(context);
             }
 
-            _window = Services.GetService<MainWindow>();
-            _window.Activate();
+            Window = Services.GetService<MainWindow>();
+            if (Window != null)
+            {
+                Window.Activate();
+            }
         }
     }
 }
