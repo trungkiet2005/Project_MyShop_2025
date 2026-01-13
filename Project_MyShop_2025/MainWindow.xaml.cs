@@ -16,6 +16,8 @@ using Windows.Foundation.Collections;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
+using Project_MyShop_2025.ViewModels;
+
 namespace Project_MyShop_2025
 {
     /// <summary>
@@ -23,9 +25,12 @@ namespace Project_MyShop_2025
     /// </summary>
     public sealed partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainViewModel ViewModel { get; }
+
+        public MainWindow(MainViewModel viewModel)
         {
             InitializeComponent();
+            ViewModel = viewModel;
         }
     }
 }

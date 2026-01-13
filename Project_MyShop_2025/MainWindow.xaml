@@ -14,6 +14,9 @@
     </Window.SystemBackdrop>
 
     <Grid>
-
+        <TextBlock Text="{x:Bind ViewModel.Greeting}" 
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Center" 
+                   Style="{StaticResource TitleTextBlockStyle}"/>
     </Grid>
 </Window>

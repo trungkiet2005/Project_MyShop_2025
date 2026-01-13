@@ -51,6 +51,7 @@ namespace Project_MyShop_2025
         private void ConfigureServices(IServiceCollection services)
         {
             services.AddTransient<MainWindow>();
+            services.AddTransient<ViewModels.MainViewModel>();
         }
 
         /// <summary>
