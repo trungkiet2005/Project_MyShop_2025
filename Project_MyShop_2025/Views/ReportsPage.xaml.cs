@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Project_MyShop_2025.Core.Data;
 using Project_MyShop_2025.Core.Models;
 using System;
@@ -16,6 +17,7 @@ namespace Project_MyShop_2025.Views
         private DateTime? _fromDate = null;
         private DateTime? _toDate = null;
         private string _periodType = "Day";
+        private string _selectedQuickPeriod = "Month";
 
         public ReportsPage()
         {
@@ -32,27 +34,289 @@ namespace Project_MyShop_2025.Views
 
         private async void ReportsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            // Set default date range from start of current month to today
+            // Always set ToDate to today first
             var today = DateTime.Now.Date;
-            var firstDayOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            
             _toDate = today;
-            _fromDate = firstDayOfMonth;
-            
-            FromDatePicker.Date = new DateTimeOffset(firstDayOfMonth);
             ToDatePicker.Date = new DateTimeOffset(today);
-
-            // Wait for layout to complete before loading charts
+            
+            // Set default to "This Month"
+            SetQuickPeriod("Month");
+            UpdateQuickPeriodButtons();
+            
             this.UpdateLayout();
             await Task.Delay(100);
-            await LoadCharts();
+            await LoadAllData();
         }
 
         private async void ReportsPage_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            // Redraw charts when window size changes (with delay to ensure layout is updated)
             await Task.Delay(100);
             await LoadCharts();
+        }
+
+        private void SetQuickPeriod(string period)
+        {
+            _selectedQuickPeriod = period;
+            var today = DateTime.Now.Date;
+            
+            switch (period)
+            {
+                case "Today":
+                    _fromDate = today;
+                    _toDate = today;
+                    break;
+                case "Week":
+                    // Start of week (Monday)
+                    int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+                    _fromDate = today.AddDays(-diff);
+                    _toDate = today;
+                    break;
+                case "Month":
+                    _fromDate = new DateTime(today.Year, today.Month, 1);
+                    _toDate = today;
+                    break;
+                case "Year":
+                    _fromDate = new DateTime(today.Year, 1, 1);
+                    _toDate = today;
+                    break;
+            }
+
+            // Update date pickers
+            if (FromDatePicker != null && _fromDate.HasValue)
+                FromDatePicker.Date = new DateTimeOffset(_fromDate.Value);
+            if (ToDatePicker != null && _toDate.HasValue)
+                ToDatePicker.Date = new DateTimeOffset(_toDate.Value);
+
+            // Update date range text
+            if (DateRangeText != null)
+            {
+                DateRangeText.Text = $"{_fromDate:dd/MM} - {_toDate:dd/MM/yyyy}";
+            }
+        }
+
+        private void UpdateQuickPeriodButtons()
+        {
+            var buttons = new[] { TodayButton, WeekButton, MonthButton, YearButton };
+            var periods = new[] { "Today", "Week", "Month", "Year" };
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] != null)
+                {
+                    bool isSelected = periods[i] == _selectedQuickPeriod;
+                    buttons[i].Background = new SolidColorBrush(
+                        isSelected ? GetColorFromHex("#EFF6FF") : GetColorFromHex("#F1F5F9"));
+                    buttons[i].Foreground = new SolidColorBrush(
+                        isSelected ? GetColorFromHex("#3B82F6") : GetColorFromHex("#475569"));
+                }
+            }
+        }
+
+        private async void QuickPeriod_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string period)
+            {
+                SetQuickPeriod(period);
+                UpdateQuickPeriodButtons();
+                await LoadAllData();
+            }
+        }
+
+        private async Task LoadAllData()
+        {
+            await LoadKPIs();
+            await LoadCharts();
+            await LoadTopProducts();
+            await LoadOrdersByStatus();
+        }
+
+        private async Task LoadKPIs()
+        {
+            if (!_fromDate.HasValue || !_toDate.HasValue) return;
+
+            try
+            {
+                var orders = await _context.Orders
+                    .Include(o => o.Items)
+                        .ThenInclude(i => i.Product)
+                    .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
+                    .ToListAsync();
+
+                // Calculate KPIs
+                int totalRevenue = orders.Sum(o => o.TotalPrice);
+                int totalProfit = 0;
+                int totalProductsSold = 0;
+
+                foreach (var order in orders)
+                {
+                    foreach (var item in order.Items)
+                    {
+                        totalProductsSold += item.Quantity;
+                        int importCost = (item.Product?.ImportPrice ?? 0) * item.Quantity;
+                        totalProfit += item.TotalPrice - importCost;
+                    }
+                }
+
+                int totalOrders = orders.Count;
+                double avgOrderValue = totalOrders > 0 ? (double)totalRevenue / totalOrders : 0;
+                double profitMargin = totalRevenue > 0 ? (double)totalProfit / totalRevenue * 100 : 0;
+                double avgProductsPerOrder = totalOrders > 0 ? (double)totalProductsSold / totalOrders : 0;
+
+                // Update UI
+                TotalRevenueText.Text = $"₫{totalRevenue:N0}";
+                TotalProfitText.Text = $"₫{totalProfit:N0}";
+                TotalOrdersText.Text = totalOrders.ToString();
+                ProductsSoldText.Text = totalProductsSold.ToString();
+                
+                ProfitMarginText.Text = $"{profitMargin:F1}% profit margin";
+                AvgOrderValueText.Text = $"₫{avgOrderValue:N0} avg. value";
+                AvgProductsPerOrderText.Text = $"{avgProductsPerOrder:F1} avg. per order";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading KPIs: {ex}");
+            }
+        }
+
+        private async Task LoadTopProducts()
+        {
+            if (!_fromDate.HasValue || !_toDate.HasValue) return;
+
+            try
+            {
+                var orders = await _context.Orders
+                    .Include(o => o.Items)
+                        .ThenInclude(i => i.Product)
+                    .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
+                    .ToListAsync();
+
+                var productSales = new Dictionary<int, (string Name, int Quantity, int Revenue)>();
+
+                foreach (var order in orders)
+                {
+                    foreach (var item in order.Items)
+                    {
+                        if (item.Product != null)
+                        {
+                            if (!productSales.ContainsKey(item.ProductId))
+                                productSales[item.ProductId] = (item.Product.Name, 0, 0);
+
+                            var current = productSales[item.ProductId];
+                            productSales[item.ProductId] = (current.Name, current.Quantity + item.Quantity, current.Revenue + item.TotalPrice);
+                        }
+                    }
+                }
+
+                var topProducts = productSales
+                    .OrderByDescending(p => p.Value.Revenue)
+                    .Take(5)
+                    .Select((p, index) => new TopProductModel
+                    {
+                        Rank = (index + 1).ToString(),
+                        ProductName = p.Value.Name,
+                        Quantity = $"{p.Value.Quantity} sold",
+                        Revenue = $"₫{p.Value.Revenue:N0}"
+                    })
+                    .ToList();
+
+                TopProductsList.ItemsSource = topProducts;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading top products: {ex}");
+            }
+        }
+
+        private async Task LoadOrdersByStatus()
+        {
+            if (!_fromDate.HasValue || !_toDate.HasValue) return;
+
+            try
+            {
+                var orders = await _context.Orders
+                    .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
+                    .ToListAsync();
+
+                var statusCounts = orders.GroupBy(o => o.Status)
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                OrderStatusPanel.Children.Clear();
+
+                var statusConfigs = new[]
+                {
+                    (Status: OrderStatus.Created, Name: "Created", BgColor: "#DBEAFE", FgColor: "#1D4ED8"),
+                    (Status: OrderStatus.Paid, Name: "Paid", BgColor: "#DCFCE7", FgColor: "#15803D"),
+                    (Status: OrderStatus.Cancelled, Name: "Cancelled", BgColor: "#FEE2E2", FgColor: "#DC2626")
+                };
+
+                int total = orders.Count;
+
+                foreach (var config in statusConfigs)
+                {
+                    int count = statusCounts.GetValueOrDefault(config.Status, 0);
+                    double percentage = total > 0 ? (double)count / total * 100 : 0;
+
+                    var row = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+                    row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+                    row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+
+                    // Status badge
+                    var badge = new Border
+                    {
+                        Background = new SolidColorBrush(GetColorFromHex(config.BgColor)),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(8, 4, 8, 4),
+                        Margin = new Thickness(0, 0, 12, 0)
+                    };
+                    badge.Child = new TextBlock
+                    {
+                        Text = config.Name,
+                        FontSize = 12,
+                        FontWeight = Microsoft.UI.Text.FontWeights.Medium,
+                        Foreground = new SolidColorBrush(GetColorFromHex(config.FgColor))
+                    };
+                    Grid.SetColumn(badge, 0);
+                    row.Children.Add(badge);
+
+                    // Progress bar
+                    var progressContainer = new Border
+                    {
+                        Background = new SolidColorBrush(GetColorFromHex("#F1F5F9")),
+                        CornerRadius = new CornerRadius(4),
+                        Height = 8,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    var progress = new Border
+                    {
+                        Background = new SolidColorBrush(GetColorFromHex(config.FgColor)),
+                        CornerRadius = new CornerRadius(4),
+                        Width = Math.Max(0, percentage * 2), // Scale to max 200px
+                        HorizontalAlignment = HorizontalAlignment.Left
+                    };
+                    progressContainer.Child = progress;
+                    Grid.SetColumn(progressContainer, 1);
+                    row.Children.Add(progressContainer);
+
+                    // Count text
+                    var countText = new TextBlock
+                    {
+                        Text = $"{count} ({percentage:F0}%)",
+                        FontSize = 12,
+                        Foreground = new SolidColorBrush(GetColorFromHex("#64748B")),
+                        Margin = new Thickness(12, 0, 0, 0),
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    Grid.SetColumn(countText, 2);
+                    row.Children.Add(countText);
+
+                    OrderStatusPanel.Children.Add(row);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading orders by status: {ex}");
+            }
         }
 
         private async Task LoadCharts()
@@ -65,7 +329,9 @@ namespace Project_MyShop_2025.Views
         {
             _fromDate = FromDatePicker.Date?.DateTime;
             _toDate = ToDatePicker.Date?.DateTime;
-            await LoadCharts();
+            _selectedQuickPeriod = ""; // Clear quick period selection
+            UpdateQuickPeriodButtons();
+            await LoadAllData();
         }
 
         private async void PeriodComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -83,9 +349,8 @@ namespace Project_MyShop_2025.Views
 
             try
             {
-                // Update layout first
                 ProductSalesChart.UpdateLayout();
-                await Task.Delay(50); // Small delay to ensure layout is complete
+                await Task.Delay(50);
 
                 var orders = await _context.Orders
                     .Include(o => o.Items)
@@ -93,7 +358,6 @@ namespace Project_MyShop_2025.Views
                     .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
                     .ToListAsync();
 
-                // Group sales by period
                 var salesData = new Dictionary<string, int>();
                 
                 foreach (var order in orders)
@@ -108,125 +372,98 @@ namespace Project_MyShop_2025.Views
                     }
                 }
 
-                // Sort by date
                 var sortedKeys = salesData.Keys.OrderBy(k => k).ToList();
                 if (!sortedKeys.Any())
                 {
-                    ProductSalesSummaryText.Text = "No sales data for selected period";
+                    ProductSalesSummaryText.Text = "No data";
                     ProductSalesChart.Children.Clear();
                     ProductSalesLabels.Children.Clear();
                     return;
                 }
 
-                // Clear previous chart
                 ProductSalesChart.Children.Clear();
                 ProductSalesLabels.Children.Clear();
 
-                // Get actual dimensions from parent Border or Grid
-                double chartWidth = 0;
-                double chartHeight = 0;
-                
-                var parentBorder = ProductSalesChart.Parent as FrameworkElement;
-                if (parentBorder != null)
-                {
-                    chartWidth = parentBorder.ActualWidth;
-                    chartHeight = parentBorder.ActualHeight;
-                    
-                    // If Border doesn't have size, try to get from Grid parent
-                    if (chartWidth <= 0 || chartHeight <= 0)
-                    {
-                        var gridParent = parentBorder.Parent as FrameworkElement;
-                        if (gridParent != null)
-                        {
-                            chartWidth = gridParent.ActualWidth > 0 ? gridParent.ActualWidth : 1000;
-                            chartHeight = gridParent.ActualHeight > 0 ? gridParent.ActualHeight : 300;
-                        }
-                    }
-                }
-                
-                // Fallback values if still no size
-                if (chartWidth <= 0) chartWidth = 1000;
-                if (chartHeight <= 0) chartHeight = 300;
+                double chartWidth = GetChartWidth(ProductSalesChart);
+                double chartHeight = GetChartHeight(ProductSalesChart);
 
-                // Set explicit size on canvas to ensure it has dimensions
                 ProductSalesChart.Width = chartWidth;
                 ProductSalesChart.Height = chartHeight;
 
-            int maxQuantity = salesData.Values.Max();
-            if (maxQuantity == 0) maxQuantity = 1;
+                int maxQuantity = salesData.Values.Max();
+                if (maxQuantity == 0) maxQuantity = 1;
 
-            double pointSpacing = Math.Max(20, chartWidth / (sortedKeys.Count + 1));
-            double baseY = chartHeight - 40;
+                double pointSpacing = Math.Max(20, chartWidth / (sortedKeys.Count + 1));
+                double baseY = chartHeight - 40;
 
-            // Draw line chart
-            var points = new List<Windows.Foundation.Point>();
-            for (int i = 0; i < sortedKeys.Count; i++)
-            {
-                string key = sortedKeys[i];
-                int quantity = salesData[key];
-                double x = (i + 1) * pointSpacing;
-                double y = baseY - ((quantity / (double)maxQuantity) * (chartHeight - 80));
-                points.Add(new Windows.Foundation.Point(x, y));
-            }
-
-            // Draw lines connecting points
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                var line = new Microsoft.UI.Xaml.Shapes.Line
+                // Draw area fill
+                var points = new List<Windows.Foundation.Point>();
+                for (int i = 0; i < sortedKeys.Count; i++)
                 {
-                    X1 = points[i].X,
-                    Y1 = points[i].Y,
-                    X2 = points[i + 1].X,
-                    Y2 = points[i + 1].Y,
-                    Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                        Microsoft.UI.ColorHelper.FromArgb(255, 33, 150, 243)),
-                    StrokeThickness = 3
-                };
-                ProductSalesChart.Children.Add(line);
-            }
-
-            // Draw points
-            foreach (var point in points)
-            {
-                var ellipse = new Microsoft.UI.Xaml.Shapes.Ellipse
-                {
-                    Width = 8,
-                    Height = 8,
-                    Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                        Microsoft.UI.ColorHelper.FromArgb(255, 33, 150, 243)),
-                    Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                        Microsoft.UI.ColorHelper.FromArgb(255, 255, 255, 255)),
-                    StrokeThickness = 2
-                };
-                Microsoft.UI.Xaml.Controls.Canvas.SetLeft(ellipse, point.X - 4);
-                Microsoft.UI.Xaml.Controls.Canvas.SetTop(ellipse, point.Y - 4);
-                ProductSalesChart.Children.Add(ellipse);
-            }
-
-            // Add labels
-            for (int i = 0; i < sortedKeys.Count; i++)
-            {
-                if (i % Math.Max(1, sortedKeys.Count / 10) == 0 || i == sortedKeys.Count - 1)
-                {
-                    var label = new TextBlock
-                    {
-                        Text = FormatPeriodLabel(sortedKeys[i]),
-                        FontSize = 10,
-                        Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.ColorHelper.FromArgb(255, 128, 128, 128)),
-                        Width = pointSpacing * Math.Max(1, sortedKeys.Count / 10),
-                        TextAlignment = Microsoft.UI.Xaml.TextAlignment.Center
-                    };
-                    ProductSalesLabels.Children.Add(label);
+                    string key = sortedKeys[i];
+                    int quantity = salesData[key];
+                    double x = (i + 1) * pointSpacing;
+                    double y = baseY - ((quantity / (double)maxQuantity) * (chartHeight - 80));
+                    points.Add(new Windows.Foundation.Point(x, y));
                 }
-            }
+
+                // Draw gradient area under line
+                if (points.Count > 1)
+                {
+                    var areaPoints = new Microsoft.UI.Xaml.Media.PointCollection();
+                    areaPoints.Add(new Windows.Foundation.Point(points[0].X, baseY));
+                    foreach (var p in points)
+                        areaPoints.Add(p);
+                    areaPoints.Add(new Windows.Foundation.Point(points[points.Count - 1].X, baseY));
+
+                    var areaPolygon = new Microsoft.UI.Xaml.Shapes.Polygon
+                    {
+                        Points = areaPoints,
+                        Fill = new SolidColorBrush(Windows.UI.Color.FromArgb(40, 59, 130, 246))
+                    };
+                    ProductSalesChart.Children.Add(areaPolygon);
+                }
+
+                // Draw lines
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    var line = new Microsoft.UI.Xaml.Shapes.Line
+                    {
+                        X1 = points[i].X,
+                        Y1 = points[i].Y,
+                        X2 = points[i + 1].X,
+                        Y2 = points[i + 1].Y,
+                        Stroke = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 59, 130, 246)),
+                        StrokeThickness = 3
+                    };
+                    ProductSalesChart.Children.Add(line);
+                }
+
+                // Draw points
+                foreach (var point in points)
+                {
+                    var ellipse = new Microsoft.UI.Xaml.Shapes.Ellipse
+                    {
+                        Width = 10,
+                        Height = 10,
+                        Fill = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 59, 130, 246)),
+                        Stroke = new SolidColorBrush(Microsoft.UI.Colors.White),
+                        StrokeThickness = 2
+                    };
+                    Microsoft.UI.Xaml.Controls.Canvas.SetLeft(ellipse, point.X - 5);
+                    Microsoft.UI.Xaml.Controls.Canvas.SetTop(ellipse, point.Y - 5);
+                    ProductSalesChart.Children.Add(ellipse);
+                }
+
+                // Labels
+                AddChartLabels(sortedKeys, pointSpacing, ProductSalesLabels);
 
                 int totalSales = salesData.Values.Sum();
-                ProductSalesSummaryText.Text = $"Total products sold: {totalSales} units over {sortedKeys.Count} {_periodType.ToLower()} period(s)";
+                ProductSalesSummaryText.Text = $"{totalSales} units sold";
             }
             catch (Exception ex)
             {
-                ProductSalesSummaryText.Text = $"Error loading chart: {ex.Message}";
+                ProductSalesSummaryText.Text = "Error";
                 System.Diagnostics.Debug.WriteLine($"Error in DrawProductSalesChart: {ex}");
             }
         }
@@ -237,9 +474,8 @@ namespace Project_MyShop_2025.Views
 
             try
             {
-                // Update layout first
                 RevenueProfitChart.UpdateLayout();
-                await Task.Delay(50); // Small delay to ensure layout is complete
+                await Task.Delay(50);
 
                 var orders = await _context.Orders
                     .Include(o => o.Items)
@@ -247,7 +483,6 @@ namespace Project_MyShop_2025.Views
                     .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
                     .ToListAsync();
 
-                // Calculate revenue and profit by period
                 var revenueData = new Dictionary<string, int>();
                 var profitData = new Dictionary<string, int>();
 
@@ -264,8 +499,6 @@ namespace Project_MyShop_2025.Views
                     foreach (var item in order.Items)
                     {
                         revenueData[periodKey] += item.TotalPrice;
-                        
-                        // Calculate profit: Revenue - (ImportPrice * Quantity)
                         int importCost = (item.Product?.ImportPrice ?? 0) * item.Quantity;
                         profitData[periodKey] += item.TotalPrice - importCost;
                     }
@@ -274,115 +507,103 @@ namespace Project_MyShop_2025.Views
                 var sortedKeys = revenueData.Keys.OrderBy(k => k).ToList();
                 if (!sortedKeys.Any())
                 {
-                    RevenueProfitSummaryText.Text = "No revenue data for selected period";
                     RevenueProfitChart.Children.Clear();
                     RevenueProfitLabels.Children.Clear();
                     return;
                 }
 
-                // Clear previous chart
                 RevenueProfitChart.Children.Clear();
                 RevenueProfitLabels.Children.Clear();
 
-                // Get actual dimensions from parent Border or Grid
-                double chartWidth = 0;
-                double chartHeight = 0;
-                
-                var parentBorder = RevenueProfitChart.Parent as FrameworkElement;
-                if (parentBorder != null)
-                {
-                    chartWidth = parentBorder.ActualWidth;
-                    chartHeight = parentBorder.ActualHeight;
-                    
-                    // If Border doesn't have size, try to get from Grid parent
-                    if (chartWidth <= 0 || chartHeight <= 0)
-                    {
-                        var gridParent = parentBorder.Parent as FrameworkElement;
-                        if (gridParent != null)
-                        {
-                            chartWidth = gridParent.ActualWidth > 0 ? gridParent.ActualWidth : 1000;
-                            chartHeight = gridParent.ActualHeight > 0 ? gridParent.ActualHeight : 300;
-                        }
-                    }
-                }
-                
-                // Fallback values if still no size
-                if (chartWidth <= 0) chartWidth = 1000;
-                if (chartHeight <= 0) chartHeight = 300;
+                double chartWidth = GetChartWidth(RevenueProfitChart);
+                double chartHeight = GetChartHeight(RevenueProfitChart);
 
-                // Set explicit size on canvas to ensure it has dimensions
                 RevenueProfitChart.Width = chartWidth;
                 RevenueProfitChart.Height = chartHeight;
 
-            int maxValue = Math.Max(revenueData.Values.Max(), profitData.Values.Any() ? profitData.Values.Max() : 0);
-            if (maxValue == 0) maxValue = 1;
+                int maxValue = Math.Max(revenueData.Values.Max(), profitData.Values.Any() ? profitData.Values.Max() : 0);
+                if (maxValue == 0) maxValue = 1;
 
-            double barWidth = Math.Max(20, (chartWidth - 100) / (sortedKeys.Count * 3));
-            double spacing = barWidth / 3;
+                double barWidth = Math.Max(16, (chartWidth - 100) / (sortedKeys.Count * 3));
+                double spacing = barWidth / 4;
 
-            // Draw bars
-            for (int i = 0; i < sortedKeys.Count; i++)
-            {
-                string key = sortedKeys[i];
-                int revenue = revenueData[key];
-                int profit = profitData.ContainsKey(key) ? profitData[key] : 0;
-
-                double x = (i * barWidth * 3) + 50;
-
-                // Revenue bar
-                double revenueHeight = (revenue / (double)maxValue) * (chartHeight - 80);
-                var revenueBar = new Microsoft.UI.Xaml.Shapes.Rectangle
+                for (int i = 0; i < sortedKeys.Count; i++)
                 {
-                    Width = barWidth - spacing,
-                    Height = Math.Max(2, revenueHeight),
-                    Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                        Microsoft.UI.ColorHelper.FromArgb(255, 33, 150, 243)), // Blue
-                    RadiusX = 2,
-                    RadiusY = 2
-                };
-                Microsoft.UI.Xaml.Controls.Canvas.SetLeft(revenueBar, x);
-                Microsoft.UI.Xaml.Controls.Canvas.SetTop(revenueBar, chartHeight - revenueHeight - 40);
-                RevenueProfitChart.Children.Add(revenueBar);
+                    string key = sortedKeys[i];
+                    int revenue = revenueData[key];
+                    int profit = profitData.GetValueOrDefault(key, 0);
 
-                // Profit bar
-                double profitHeight = (profit / (double)maxValue) * (chartHeight - 80);
-                var profitBar = new Microsoft.UI.Xaml.Shapes.Rectangle
-                {
-                    Width = barWidth - spacing,
-                    Height = Math.Max(2, profitHeight),
-                    Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                        Microsoft.UI.ColorHelper.FromArgb(255, 76, 175, 80)), // Green
-                    RadiusX = 2,
-                    RadiusY = 2
-                };
-                Microsoft.UI.Xaml.Controls.Canvas.SetLeft(profitBar, x + barWidth);
-                Microsoft.UI.Xaml.Controls.Canvas.SetTop(profitBar, chartHeight - profitHeight - 40);
-                RevenueProfitChart.Children.Add(profitBar);
+                    double x = (i * barWidth * 3) + 50;
 
-                // Add label
-                if (i % Math.Max(1, sortedKeys.Count / 10) == 0 || i == sortedKeys.Count - 1)
-                {
-                    var label = new TextBlock
+                    // Revenue bar
+                    double revenueHeight = (revenue / (double)maxValue) * (chartHeight - 80);
+                    var revenueBar = new Microsoft.UI.Xaml.Shapes.Rectangle
                     {
-                        Text = FormatPeriodLabel(key),
-                        FontSize = 10,
-                        Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                            Microsoft.UI.ColorHelper.FromArgb(255, 128, 128, 128)),
-                        Width = barWidth * 3,
-                        TextAlignment = Microsoft.UI.Xaml.TextAlignment.Center
+                        Width = barWidth - spacing,
+                        Height = Math.Max(2, revenueHeight),
+                        Fill = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 59, 130, 246)),
+                        RadiusX = 4,
+                        RadiusY = 4
                     };
-                    RevenueProfitLabels.Children.Add(label);
-                }
-            }
+                    Microsoft.UI.Xaml.Controls.Canvas.SetLeft(revenueBar, x);
+                    Microsoft.UI.Xaml.Controls.Canvas.SetTop(revenueBar, chartHeight - revenueHeight - 40);
+                    RevenueProfitChart.Children.Add(revenueBar);
 
-                int totalRevenue = revenueData.Values.Sum();
-                int totalProfit = profitData.Values.Sum();
-                RevenueProfitSummaryText.Text = $"Total Revenue: ₫{totalRevenue:N0} | Total Profit: ₫{totalProfit:N0} | Profit Margin: {(totalRevenue > 0 ? (totalProfit * 100.0 / totalRevenue):0):F1}%";
+                    // Profit bar
+                    double profitHeight = (profit / (double)maxValue) * (chartHeight - 80);
+                    var profitBar = new Microsoft.UI.Xaml.Shapes.Rectangle
+                    {
+                        Width = barWidth - spacing,
+                        Height = Math.Max(2, profitHeight),
+                        Fill = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 34, 197, 94)),
+                        RadiusX = 4,
+                        RadiusY = 4
+                    };
+                    Microsoft.UI.Xaml.Controls.Canvas.SetLeft(profitBar, x + barWidth);
+                    Microsoft.UI.Xaml.Controls.Canvas.SetTop(profitBar, chartHeight - profitHeight - 40);
+                    RevenueProfitChart.Children.Add(profitBar);
+                }
+
+                AddChartLabels(sortedKeys, barWidth * 3, RevenueProfitLabels);
             }
             catch (Exception ex)
             {
-                RevenueProfitSummaryText.Text = $"Error loading chart: {ex.Message}";
                 System.Diagnostics.Debug.WriteLine($"Error in DrawRevenueProfitChart: {ex}");
+            }
+        }
+
+        private double GetChartWidth(FrameworkElement chart)
+        {
+            var parent = chart.Parent as FrameworkElement;
+            if (parent != null && parent.ActualWidth > 0)
+                return parent.ActualWidth;
+            return 800;
+        }
+
+        private double GetChartHeight(FrameworkElement chart)
+        {
+            var parent = chart.Parent as FrameworkElement;
+            if (parent != null && parent.ActualHeight > 0)
+                return parent.ActualHeight;
+            return 280;
+        }
+
+        private void AddChartLabels(List<string> keys, double spacing, StackPanel labelPanel)
+        {
+            for (int i = 0; i < keys.Count; i++)
+            {
+                if (i % Math.Max(1, keys.Count / 8) == 0 || i == keys.Count - 1)
+                {
+                    var label = new TextBlock
+                    {
+                        Text = FormatPeriodLabel(keys[i]),
+                        FontSize = 11,
+                        Foreground = new SolidColorBrush(GetColorFromHex("#64748B")),
+                        Width = spacing * Math.Max(1, keys.Count / 8),
+                        TextAlignment = TextAlignment.Center
+                    };
+                    labelPanel.Children.Add(label);
+                }
             }
         }
 
@@ -401,11 +622,11 @@ namespace Project_MyShop_2025.Views
         private string FormatPeriodLabel(string key)
         {
             if (_periodType == "Day" && DateTime.TryParse(key, out DateTime day))
-                return day.ToString("MM/dd");
+                return day.ToString("dd/MM");
             else if (_periodType == "Week")
                 return key.Replace("-W", " W");
             else if (_periodType == "Month" && DateTime.TryParse(key + "-01", out DateTime month))
-                return month.ToString("MM/yyyy");
+                return month.ToString("MM/yy");
             else if (_periodType == "Year")
                 return key;
             return key;
@@ -417,6 +638,23 @@ namespace Project_MyShop_2025.Views
             var calendar = culture.Calendar;
             return calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, culture.DateTimeFormat.FirstDayOfWeek);
         }
+
+        private static Windows.UI.Color GetColorFromHex(string hex)
+        {
+            hex = hex.Replace("#", "");
+            byte a = 255;
+            byte r = byte.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
+            byte g = byte.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
+            byte b = byte.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
+            return Windows.UI.Color.FromArgb(a, r, g, b);
+        }
+    }
+
+    public class TopProductModel
+    {
+        public string Rank { get; set; } = "";
+        public string ProductName { get; set; } = "";
+        public string Quantity { get; set; } = "";
+        public string Revenue { get; set; } = "";
     }
 }
-

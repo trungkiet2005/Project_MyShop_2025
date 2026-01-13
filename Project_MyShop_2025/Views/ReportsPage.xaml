@@ -7,126 +7,373 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="#F8F9FA">
+    Background="#F8FAFC">
 
-    <ScrollViewer>
-        <Grid Padding="24">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,24">
-                <TextBlock Text="Reports &amp; Statistics" FontSize="32" FontWeight="Bold" Foreground="#1A1A1A"/>
-                <TextBlock Text="Business insights and analytics" FontSize="14" Foreground="#666666" Margin="0,4,0,0"/>
-            </StackPanel>
+        <!-- Row 0: Page Header -->
+        <Border Grid.Row="0" Background="White" Padding="24,20" 
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Filter Controls -->
-            <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,16">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="16"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <TextBlock Grid.Column="0" Text="Time Period:" FontSize="14" FontWeight="SemiBold" Foreground="#1A1A1A" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                    
-                    <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock Text="From Date" FontSize="11" Foreground="#666666"/>
-                        <CalendarDatePicker x:Name="FromDatePicker" DateChanged="DateFilter_Changed"/>
+                <!-- Left: Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <TextBlock Text="Reports &amp; Analytics" FontSize="24" FontWeight="Bold" Foreground="#0F172A"/>
+                </StackPanel>
+
+                <!-- Right: Quick Period Buttons + Export -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
+                    <!-- Quick Period Pills -->
+                    <StackPanel x:Name="QuickPeriodPanel" Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="TodayButton" Click="QuickPeriod_Click" Tag="Today"
+                                Background="#EFF6FF" Foreground="#3B82F6" 
+                                BorderThickness="0" CornerRadius="16" Padding="14,8" FontWeight="SemiBold" FontSize="12">
+                            <TextBlock Text="Today"/>
+                        </Button>
+                        <Button x:Name="WeekButton" Click="QuickPeriod_Click" Tag="Week"
+                                Background="#F1F5F9" Foreground="#475569" 
+                                BorderThickness="0" CornerRadius="16" Padding="14,8" FontSize="12">
+                            <TextBlock Text="This Week"/>
+                        </Button>
+                        <Button x:Name="MonthButton" Click="QuickPeriod_Click" Tag="Month"
+                                Background="#F1F5F9" Foreground="#475569" 
+                                BorderThickness="0" CornerRadius="16" Padding="14,8" FontSize="12">
+                            <TextBlock Text="This Month"/>
+                        </Button>
+                        <Button x:Name="YearButton" Click="QuickPeriod_Click" Tag="Year"
+                                Background="#F1F5F9" Foreground="#475569" 
+                                BorderThickness="0" CornerRadius="16" Padding="14,8" FontSize="12">
+                            <TextBlock Text="This Year"/>
+                        </Button>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="3" Spacing="4">
-                        <TextBlock Text="To Date" FontSize="11" Foreground="#666666"/>
-                        <CalendarDatePicker x:Name="ToDatePicker" DateChanged="DateFilter_Changed"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                    <Border Background="#E2E8F0" Width="1" Height="24"/>
 
-            <!-- Period Selector -->
-            <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,16">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <TextBlock Grid.Column="0" Text="Group By:" FontSize="14" FontWeight="SemiBold" Foreground="#1A1A1A" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                    <ComboBox x:Name="PeriodComboBox" Grid.Column="1" SelectionChanged="PeriodComboBox_SelectionChanged">
+                    <!-- Custom Date Range -->
+                    <Button Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" 
+                            CornerRadius="8" Padding="12,8" Height="40">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE787;" FontSize="14" Foreground="#64748B"/>
+                            <TextBlock x:Name="DateRangeText" Text="Custom Range" FontSize="13" Foreground="#475569"/>
+                            <FontIcon Glyph="&#xE70D;" FontSize="10" Foreground="#94A3B8"/>
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout Placement="Bottom">
+                                <StackPanel Spacing="16" Width="320" Padding="4">
+                                    <TextBlock Text="Select Date Range" FontWeight="SemiBold" FontSize="14" Foreground="#0F172A"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="16"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="From" FontSize="12" Foreground="#64748B"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="2" Text="To" FontSize="12" Foreground="#64748B"/>
+                                        
+                                        <CalendarDatePicker x:Name="FromDatePicker" Grid.Row="2" Grid.Column="0" 
+                                                           DateChanged="DateFilter_Changed" HorizontalAlignment="Stretch"/>
+                                        <CalendarDatePicker x:Name="ToDatePicker" Grid.Row="2" Grid.Column="2" 
+                                                           DateChanged="DateFilter_Changed" HorizontalAlignment="Stretch"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <!-- Group By Dropdown -->
+                    <ComboBox x:Name="PeriodComboBox" Width="130" SelectionChanged="PeriodComboBox_SelectionChanged">
                         <ComboBoxItem Content="Daily" Tag="Day" IsSelected="True"/>
                         <ComboBoxItem Content="Weekly" Tag="Week"/>
                         <ComboBoxItem Content="Monthly" Tag="Month"/>
                         <ComboBoxItem Content="Yearly" Tag="Year"/>
                     </ComboBox>
+
+                    <!-- Export Button -->
+                    <Button Background="White" BorderBrush="#E2E8F0" BorderThickness="1" 
+                            CornerRadius="8" Padding="14,8" Height="40"
+                            ToolTipService.ToolTip="Export report">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xEDE1;" FontSize="14" Foreground="#64748B"/>
+                            <TextBlock Text="Export" FontSize="13" Foreground="#475569"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Row 1: KPI Cards -->
+        <Border Grid.Row="1" Background="#FFFFFF" Padding="24,20" 
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Total Revenue Card -->
+                <Border Grid.Column="0" Background="#EFF6FF" CornerRadius="12" Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="4"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                            <Border Background="#3B82F6" CornerRadius="8" Padding="8">
+                                <FontIcon Glyph="&#xE7BF;" FontSize="16" Foreground="White"/>
+                            </Border>
+                            <TextBlock Text="Total Revenue" FontSize="13" Foreground="#3B82F6" 
+                                       FontWeight="Medium" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock x:Name="TotalRevenueText" Grid.Row="2" Text="₫0" FontSize="28" 
+                                   FontWeight="Bold" Foreground="#1E40AF"/>
+                        <TextBlock x:Name="RevenueChangeText" Grid.Row="4" Text="+0% vs last period" 
+                                   FontSize="12" Foreground="#64748B"/>
+                    </Grid>
+                </Border>
+
+                <!-- Total Profit Card -->
+                <Border Grid.Column="2" Background="#DCFCE7" CornerRadius="12" Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="4"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                            <Border Background="#22C55E" CornerRadius="8" Padding="8">
+                                <FontIcon Glyph="&#xE8C8;" FontSize="16" Foreground="White"/>
+                            </Border>
+                            <TextBlock Text="Total Profit" FontSize="13" Foreground="#16A34A" 
+                                       FontWeight="Medium" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock x:Name="TotalProfitText" Grid.Row="2" Text="₫0" FontSize="28" 
+                                   FontWeight="Bold" Foreground="#15803D"/>
+                        <TextBlock x:Name="ProfitMarginText" Grid.Row="4" Text="0% profit margin" 
+                                   FontSize="12" Foreground="#64748B"/>
+                    </Grid>
+                </Border>
+
+                <!-- Total Orders Card -->
+                <Border Grid.Column="4" Background="#FEF3C7" CornerRadius="12" Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="4"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                            <Border Background="#F59E0B" CornerRadius="8" Padding="8">
+                                <FontIcon Glyph="&#xE719;" FontSize="16" Foreground="White"/>
+                            </Border>
+                            <TextBlock Text="Total Orders" FontSize="13" Foreground="#D97706" 
+                                       FontWeight="Medium" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock x:Name="TotalOrdersText" Grid.Row="2" Text="0" FontSize="28" 
+                                   FontWeight="Bold" Foreground="#B45309"/>
+                        <TextBlock x:Name="AvgOrderValueText" Grid.Row="4" Text="₫0 avg. order value" 
+                                   FontSize="12" Foreground="#64748B"/>
+                    </Grid>
+                </Border>
+
+                <!-- Products Sold Card -->
+                <Border Grid.Column="6" Background="#F3E8FF" CornerRadius="12" Padding="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="4"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                            <Border Background="#A855F7" CornerRadius="8" Padding="8">
+                                <FontIcon Glyph="&#xE7BF;" FontSize="16" Foreground="White"/>
+                            </Border>
+                            <TextBlock Text="Products Sold" FontSize="13" Foreground="#9333EA" 
+                                       FontWeight="Medium" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock x:Name="ProductsSoldText" Grid.Row="2" Text="0" FontSize="28" 
+                                   FontWeight="Bold" Foreground="#7E22CE"/>
+                        <TextBlock x:Name="AvgProductsPerOrderText" Grid.Row="4" Text="0 avg. per order" 
+                                   FontSize="12" Foreground="#64748B"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Row 2: Charts -->
+        <ScrollViewer Grid.Row="2" Padding="24,20" VerticalScrollBarVisibility="Auto" Background="#F8FAFC">
+            <StackPanel Spacing="20">
+                <!-- Revenue & Profit Chart -->
+                <Border Background="White" CornerRadius="12" Padding="24" BorderBrush="#E2E8F0" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="16"/>
+                            <RowDefinition Height="280"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Chart Header -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Revenue &amp; Profit Overview" FontSize="16" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                <TextBlock Text="Compare revenue and profit over time" FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            
+                            <!-- Legend -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Border Width="12" Height="12" CornerRadius="2" Background="#3B82F6"/>
+                                    <TextBlock Text="Revenue" FontSize="12" Foreground="#64748B"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Border Width="12" Height="12" CornerRadius="2" Background="#22C55E"/>
+                                    <TextBlock Text="Profit" FontSize="12" Foreground="#64748B"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Chart Area -->
+                        <Border Grid.Row="2" Background="#FAFAFA" CornerRadius="8">
+                            <Canvas x:Name="RevenueProfitChart" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </Border>
+
+                        <!-- Chart Labels -->
+                        <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">
+                            <StackPanel x:Name="RevenueProfitLabels" Orientation="Horizontal"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- Product Sales Chart -->
+                <Border Background="White" CornerRadius="12" Padding="24" BorderBrush="#E2E8F0" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="16"/>
+                            <RowDefinition Height="280"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Chart Header -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Product Sales Trend" FontSize="16" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                <TextBlock Text="Number of products sold over time" FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            
+                            <!-- Summary Badge -->
+                            <Border Grid.Column="1" Background="#EFF6FF" CornerRadius="8" Padding="12,6">
+                                <TextBlock x:Name="ProductSalesSummaryText" Text="Loading..." FontSize="12" 
+                                           Foreground="#3B82F6" FontWeight="Medium"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Chart Area -->
+                        <Border Grid.Row="2" Background="#FAFAFA" CornerRadius="8">
+                            <Canvas x:Name="ProductSalesChart" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                        </Border>
+
+                        <!-- Chart Labels -->
+                        <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">
+                            <StackPanel x:Name="ProductSalesLabels" Orientation="Horizontal"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- Top Products Section (Optional) -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Top Selling Products -->
+                    <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24" 
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Top Selling Products" FontSize="16" FontWeight="SemiBold" Foreground="#0F172A"/>
+                            <TextBlock Text="Best performers in selected period" FontSize="12" Foreground="#64748B" Margin="0,4,0,16"/>
+                            <ListView x:Name="TopProductsList" SelectionMode="None" MaxHeight="250">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Width="32" Height="32" CornerRadius="8" 
+                                                    Background="#F1F5F9" Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding Rank}" FontWeight="Bold" FontSize="14"
+                                                           Foreground="#64748B" HorizontalAlignment="Center" 
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding ProductName}" FontWeight="Medium" 
+                                                           Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Quantity}" FontSize="12" Foreground="#64748B"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="{Binding Revenue}" FontWeight="SemiBold"
+                                                       Foreground="#3B82F6" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Orders by Status -->
+                    <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24" 
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Orders by Status" FontSize="16" FontWeight="SemiBold" Foreground="#0F172A"/>
+                            <TextBlock Text="Order distribution in selected period" FontSize="12" Foreground="#64748B" Margin="0,4,0,16"/>
+                            <StackPanel x:Name="OrderStatusPanel" Spacing="12"/>
+                        </StackPanel>
+                    </Border>
                 </Grid>
-            </Border>
-
-            <!-- Charts Section -->
-            <StackPanel Grid.Row="3" Spacing="16">
-                <!-- Product Sales Chart (Line Chart) -->
-                <Border Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
-                    <StackPanel Spacing="20">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="📊 Product Sales" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
-                            <TextBlock Text="Product sales quantity over time" FontSize="12" Foreground="#999999"/>
-                        </StackPanel>
-                        
-                        <Grid Height="300" Margin="0,8,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            
-                            <Border Grid.Row="0" Background="#FAFAFA" CornerRadius="8">
-                                <Canvas x:Name="ProductSalesChart" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                            </Border>
-                            
-                            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">
-                                <StackPanel x:Name="ProductSalesLabels" Orientation="Horizontal"/>
-                            </ScrollViewer>
-                        </Grid>
-                        
-                        <Border Background="#F5F5F5" CornerRadius="8" Padding="16,12">
-                            <TextBlock x:Name="ProductSalesSummaryText" Text="Loading chart data..." FontSize="12" Foreground="#666666" HorizontalAlignment="Center"/>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- Revenue & Profit Chart (Bar Chart) -->
-                <Border Background="White" CornerRadius="12" Padding="24" BorderBrush="#E0E0E0" BorderThickness="1">
-                    <StackPanel Spacing="20">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="💰 Revenue &amp; Profit" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A1A"/>
-                            <TextBlock Text="Revenue and profit comparison" FontSize="12" Foreground="#999999"/>
-                        </StackPanel>
-                        
-                        <Grid Height="300" Margin="0,8,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            
-                            <Border Grid.Row="0" Background="#FAFAFA" CornerRadius="8">
-                                <Canvas x:Name="RevenueProfitChart" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                            </Border>
-                            
-                            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,12,0,0">
-                                <StackPanel x:Name="RevenueProfitLabels" Orientation="Horizontal"/>
-                            </ScrollViewer>
-                        </Grid>
-                        
-                        <Border Background="#F5F5F5" CornerRadius="8" Padding="16,12">
-                            <TextBlock x:Name="RevenueProfitSummaryText" Text="Loading chart data..." FontSize="12" Foreground="#666666" HorizontalAlignment="Center"/>
-                        </Border>
-                    </StackPanel>
-                </Border>
             </StackPanel>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </Page>
-
