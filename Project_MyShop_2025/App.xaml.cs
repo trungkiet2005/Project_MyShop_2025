@@ -108,6 +108,8 @@ namespace Project_MyShop_2025
             services.AddScoped<IDatabaseService, DatabaseService>();
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IPromotionService, PromotionService>();
+            services.AddScoped<Services.PrintService>();
+            services.AddScoped<Core.Services.Interfaces.IPrintService>(provider => provider.GetRequiredService<Services.PrintService>());
         }
 
         /// <summary>

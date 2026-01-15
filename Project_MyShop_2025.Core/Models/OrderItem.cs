@@ -20,5 +20,11 @@ namespace Project_MyShop_2025.Core.Models
         public int Price { get; set; } // Unit sale price -
         
         public int TotalPrice { get; set; }
+
+        [NotMapped]
+        public string PriceFormatted => $"₫{Price:N0}";
+
+        [NotMapped]
+        public string TotalPriceFormatted => $"₫{TotalPrice:N0}";
     }
 }

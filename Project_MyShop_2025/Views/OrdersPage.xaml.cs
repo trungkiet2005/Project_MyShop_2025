@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using Microsoft.Extensions.DependencyInjection;
+using Project_MyShop_2025.Core.Services.Interfaces;
 
 namespace Project_MyShop_2025.Views
 {
@@ -29,6 +31,7 @@ namespace Project_MyShop_2025.Views
         private DateTime? _toDate = null;
         private string _searchText = "";
         private string _sortBy = "DateDesc";
+        private IPrintService _printService;
 
         public OrdersPage()
         {
@@ -40,6 +43,12 @@ namespace Project_MyShop_2025.Views
             _context = new ShopDbContext(optionsBuilder.Options);
 
             this.Loaded += OrdersPage_Loaded;
+            
+            // Resolve PrintService
+            if (Application.Current is App app)
+            {
+                _printService = app.Services.GetService<IPrintService>();
+            }
         }
 
         private async void OrdersPage_Loaded(object sender, RoutedEventArgs e)
@@ -467,6 +476,37 @@ namespace Project_MyShop_2025.Views
         private async void AddOrderButton_Click(object sender, RoutedEventArgs e)
         {
             await ShowCreateOrderDialog();
+        }
+
+        private async void PrintOrder_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string orderIdStr)
+            {
+                var orderId = int.Parse(orderIdStr.Replace("#", ""));
+                var order = await _context.Orders
+                    .Include(o => o.Items)
+                        .ThenInclude(i => i.Product)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order != null && _printService != null)
+                {
+                    if (_printService.IsPrintingSupported)
+                    {
+                        await _printService.PrintOrderAsync(order);
+                    }
+                    else
+                    {
+                        var dialog = new ContentDialog
+                        {
+                            Title = "Printing Not Supported",
+                            Content = "Printing is not supported on this device or configuration.",
+                            CloseButtonText = "OK",
+                            XamlRoot = this.XamlRoot
+                        };
+                        await dialog.ShowAsync();
+                    }
+                }
+            }
         }
 
         // Dialog Methods
