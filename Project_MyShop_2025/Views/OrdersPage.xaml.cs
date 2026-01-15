@@ -32,6 +32,7 @@ namespace Project_MyShop_2025.Views
         private string _searchText = "";
         private string _sortBy = "DateDesc";
         private IPrintService _printService;
+        private Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService _autoSaveService;
 
         public OrdersPage()
         {
@@ -48,6 +49,7 @@ namespace Project_MyShop_2025.Views
             if (Application.Current is App app)
             {
                 _printService = app.Services.GetService<IPrintService>();
+                _autoSaveService = app.Services.GetService<Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService>();
             }
         }
 
@@ -735,6 +737,55 @@ namespace Project_MyShop_2025.Views
             var addItemButton = new Button { Content = "Add Item", Margin = new Thickness(0, 8, 0, 0) };
             var itemsListView = new ListView { Header = "Order Items", MaxHeight = 200 };
 
+            // Load Draft
+            if (_autoSaveService != null)
+            {
+                var draft = await _autoSaveService.LoadDraftAsync<OrderDraft>("Draft_Order");
+                if (draft != null)
+                {
+                    nameBox.Text = draft.CustomerName ?? "";
+                    phoneBox.Text = draft.CustomerPhone ?? "";
+                    addressBox.Text = draft.CustomerAddress ?? "";
+                    
+                    if (draft.Items != null && draft.Items.Any())
+                    {
+                        foreach (var item in draft.Items)
+                        {
+                            var prod = products.FirstOrDefault(p => p.Id == item.ProductId);
+                            if (prod != null)
+                            {
+                                selectedProducts.Add((prod, item.Quantity, item.Price));
+                            }
+                        }
+                        
+                        itemsListView.ItemsSource = selectedProducts.Select(sp => $"{sp.product.Name} x{sp.quantity} @ ₫{sp.price:N0}").ToList();
+                    }
+                }
+
+                TextChangedEventHandler textHandler = async (s, e) => { await SaveOrderDraft(); };
+                nameBox.TextChanged += textHandler;
+                phoneBox.TextChanged += textHandler;
+                addressBox.TextChanged += textHandler;
+            }
+
+            async Task SaveOrderDraft()
+            {
+                if (_autoSaveService == null) return;
+                var draft = new OrderDraft
+                {
+                    CustomerName = nameBox.Text,
+                    CustomerPhone = phoneBox.Text,
+                    CustomerAddress = addressBox.Text,
+                    Items = selectedProducts.Select(sp => new OrderItemDraft 
+                    { 
+                        ProductId = sp.product.Id, 
+                        Quantity = sp.quantity,
+                        Price = sp.price
+                    }).ToList()
+                };
+                await _autoSaveService.SaveDraftAsync("Draft_Order", draft);
+            }
+
             addItemButton.Click += (s, e) =>
             {
                 if (productsList.SelectedItems != null && productsList.SelectedItems.Count > 0)
@@ -749,6 +800,12 @@ namespace Project_MyShop_2025.Views
                         }
                     }
                     itemsListView.ItemsSource = selectedProducts.Select(sp => $"{sp.product.Name} x{sp.quantity} @ ₫{sp.price:N0}").ToList();
+                    
+                    // Save draft
+                    if (_autoSaveService != null)
+                    {
+                        _ = SaveOrderDraft();
+                    }
                 }
             };
 
@@ -793,6 +850,13 @@ namespace Project_MyShop_2025.Views
 
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
+                
+                // Clear Draft
+                if (_autoSaveService != null)
+                {
+                    await _autoSaveService.ClearDraftAsync("Draft_Order");
+                }
+
                 await LoadOrders();
             }
         }
@@ -819,5 +883,20 @@ namespace Project_MyShop_2025.Views
         public string ItemsCount { get; set; } = string.Empty;
         public string ItemsSummary { get; set; } = string.Empty;
         public Order Order { get; set; } = null!;
+    }
+
+    public class OrderDraft
+    {
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public string CustomerAddress { get; set; }
+        public List<OrderItemDraft> Items { get; set; } = new();
+    }
+
+    public class OrderItemDraft
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public int Price { get; set; }
     }
 }

@@ -22,6 +22,7 @@ namespace Project_MyShop_2025.Views
         private List<Product> _allProducts = new();
         private List<Product> _filteredProducts = new();
         private List<CategoryFilterItem> _categories = new();
+        private Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService _autoSaveService;
         
         private int _currentPage = 1;
         private int _pageSize = 40;
@@ -38,6 +39,12 @@ namespace Project_MyShop_2025.Views
             _context = new ShopDbContext(optionsBuilder.Options);
 
             this.Loaded += ProductsPage_Loaded;
+
+            // Resolve AutoSaveService
+            if (Application.Current is App app)
+            {
+                _autoSaveService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService<Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService>(app.Services);
+            }
         }
 
         private async void ProductsPage_Loaded(object sender, RoutedEventArgs e)
@@ -631,6 +638,50 @@ namespace Project_MyShop_2025.Views
             categoryCombo.DisplayMemberPath = "Name";
             if (categories.Any()) categoryCombo.SelectedIndex = 0;
 
+            // Load Draft
+            if (_autoSaveService != null)
+            {
+                var draft = await _autoSaveService.LoadDraftAsync<ProductDraft>("Draft_Product");
+                if (draft != null)
+                {
+                    nameBox.Text = draft.Name ?? "";
+                    skuBox.Text = draft.SKU ?? "";
+                    descBox.Text = draft.Description ?? "";
+                    priceBox.Text = draft.Price ?? "0";
+                    importPriceBox.Text = draft.ImportPrice ?? "0";
+                    qtyBox.Text = draft.Quantity ?? "0";
+                    if (draft.CategoryIndex >= 0 && draft.CategoryIndex < categories.Count)
+                    {
+                        categoryCombo.SelectedIndex = draft.CategoryIndex;
+                    }
+                }
+
+                // Attach Handlers
+                TextChangedEventHandler textHandler = async (s, e) => { await SaveProductDraft(); };
+                nameBox.TextChanged += textHandler;
+                skuBox.TextChanged += textHandler;
+                descBox.TextChanged += textHandler;
+                priceBox.TextChanged += textHandler;
+                importPriceBox.TextChanged += textHandler;
+                qtyBox.TextChanged += textHandler;
+                categoryCombo.SelectionChanged += async (s, e) => { await SaveProductDraft(); };
+
+                async Task SaveProductDraft()
+                {
+                    var newDraft = new ProductDraft
+                    {
+                        Name = nameBox.Text,
+                        SKU = skuBox.Text,
+                        Description = descBox.Text,
+                        Price = priceBox.Text,
+                        ImportPrice = importPriceBox.Text,
+                        Quantity = qtyBox.Text,
+                        CategoryIndex = categoryCombo.SelectedIndex
+                    };
+                    await _autoSaveService.SaveDraftAsync("Draft_Product", newDraft);
+                }
+            }
+
             var content = new StackPanel { Spacing = 8 };
             content.Children.Add(nameBox);
             content.Children.Add(skuBox);
@@ -659,6 +710,13 @@ namespace Project_MyShop_2025.Views
 
                 _context.Products.Add(product);
                 await _context.SaveChangesAsync();
+                
+                // Clear Draft
+                if (_autoSaveService != null)
+                {
+                    await _autoSaveService.ClearDraftAsync("Draft_Product");
+                }
+
                 await LoadProducts();
             }
         }
@@ -842,5 +900,16 @@ namespace Project_MyShop_2025.Views
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+    }
+
+    public class ProductDraft
+    {
+        public string Name { get; set; }
+        public string SKU { get; set; }
+        public string Description { get; set; }
+        public string Price { get; set; }
+        public string ImportPrice { get; set; }
+        public string Quantity { get; set; }
+        public int CategoryIndex { get; set; }
     }
 }

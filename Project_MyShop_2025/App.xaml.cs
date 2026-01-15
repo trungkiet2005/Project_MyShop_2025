@@ -110,6 +110,9 @@ namespace Project_MyShop_2025
             services.AddScoped<IPromotionService, PromotionService>();
             services.AddScoped<Services.PrintService>();
             services.AddScoped<Core.Services.Interfaces.IPrintService>(provider => provider.GetRequiredService<Services.PrintService>());
+            
+            services.AddScoped<IAutoSaveService, AutoSaveService>(provider => 
+                new AutoSaveService(System.IO.Path.Combine(ApplicationData.Current.LocalFolder.Path, "Drafts")));
         }
 
         /// <summary>
