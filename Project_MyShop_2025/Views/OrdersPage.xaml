@@ -58,13 +58,16 @@
                 </Grid.RowDefinitions>
 
                 <!-- Row 0: Search, Date Range, Status -->
+                <!-- Row 0: Search, Date Range, Status -->
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="300"/>
                         <ColumnDefinition Width="24"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="12"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="180"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
@@ -127,8 +130,71 @@
                         </Button.Flyout>
                     </Button>
 
+                    <!-- Advanced Filters Button -->
+                    <Button Grid.Column="4" Background="#F8FAFC" BorderBrush="#E2E8F0" 
+                            BorderThickness="1" CornerRadius="8" Padding="14,8" Height="40">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE16E;" FontSize="14" Foreground="#64748B"/>
+                            <TextBlock Text="More Filters" FontSize="13" Foreground="#475569"/>
+                            <FontIcon Glyph="&#xE70D;" FontSize="10" Foreground="#94A3B8"/>
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout Placement="Bottom">
+                                <StackPanel Spacing="16" Width="280" Padding="4">
+                                    <TextBlock Text="Advanced Filters" FontWeight="SemiBold" FontSize="14" Foreground="#0F172A"/>
+                                    
+                                    <!-- Amount Range -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Order Total Value" FontSize="12" Foreground="#64748B"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="MinAmountBox" Grid.Column="0" 
+                                                     PlaceholderText="Min ₫" TextChanged="AmountFilter_Changed"/>
+                                            <TextBlock Grid.Column="1" Text="—" VerticalAlignment="Center" 
+                                                       HorizontalAlignment="Center" Foreground="#94A3B8"/>
+                                            <TextBox x:Name="MaxAmountBox" Grid.Column="2" 
+                                                     PlaceholderText="Max ₫" TextChanged="AmountFilter_Changed"/>
+                                        </Grid>
+                                    </StackPanel>
+                                    
+                                    <!-- Quick Filters -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Quick Filters" FontSize="12" Foreground="#64748B"/>
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Button Content="High Value (>1M)" Click="HighValueFilter_Click"
+                                                    Background="#EFF6FF" Foreground="#2563EB" 
+                                                    CornerRadius="6" Padding="10,6" FontSize="12"/>
+                                            <Button Content="Cancelled" Click="CancelledFilter_Click"
+                                                    Background="#FEF2F2" Foreground="#DC2626"
+                                                    CornerRadius="6" Padding="10,6" FontSize="12"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Apply / Clear -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Content="Clear All" Grid.Column="0" Click="ClearFilters_Click"
+                                                HorizontalAlignment="Stretch" Background="#F1F5F9" 
+                                                Foreground="#475569" CornerRadius="6"/>
+                                        <Button Content="Apply" Grid.Column="2" Click="ApplyAdvancedFilters_Click"
+                                                HorizontalAlignment="Stretch" Background="#3B82F6" 
+                                                Foreground="White" CornerRadius="6"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
                     <!-- Sort Dropdown -->
-                    <ComboBox x:Name="SortComboBox" Grid.Column="4" Width="180" 
+                    <ComboBox x:Name="SortComboBox" Grid.Column="6" HorizontalAlignment="Stretch" 
                               SelectionChanged="SortComboBox_SelectionChanged">
                         <ComboBoxItem Content="Newest First" Tag="DateDesc" IsSelected="True"/>
                         <ComboBoxItem Content="Oldest First" Tag="DateAsc"/>
@@ -137,7 +203,7 @@
                     </ComboBox>
 
                     <!-- Export Button -->
-                    <Button Grid.Column="6" Background="White" BorderBrush="#E2E8F0" 
+                    <Button Grid.Column="8" Background="White" BorderBrush="#E2E8F0" 
                             BorderThickness="1" CornerRadius="8" Padding="14,8" Height="40"
                             ToolTipService.ToolTip="Export orders">
                         <StackPanel Orientation="Horizontal" Spacing="8">

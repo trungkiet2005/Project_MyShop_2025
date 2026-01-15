@@ -198,6 +198,17 @@ namespace Project_MyShop_2025.Views
                     .ToList();
             }
 
+            // Amount range filter
+            if (MinAmountBox != null && double.TryParse(MinAmountBox.Text, out double minAmount))
+            {
+                _filteredOrders = _filteredOrders.Where(o => o.TotalPrice >= minAmount).ToList();
+            }
+
+            if (MaxAmountBox != null && double.TryParse(MaxAmountBox.Text, out double maxAmount))
+            {
+                _filteredOrders = _filteredOrders.Where(o => o.TotalPrice <= maxAmount).ToList();
+            }
+
             // Apply sorting
             _filteredOrders = _sortBy switch
             {
@@ -326,6 +337,47 @@ namespace Project_MyShop_2025.Views
             ToDatePicker.Date = null;
             _fromDate = null;
             _toDate = null;
+            ApplyFilters();
+        }
+
+        private void AmountFilter_Changed(object sender, TextChangedEventArgs e)
+        {
+            // Wait for apply button or apply immediately if desired (let's wait for apply/enter or just implicit)
+            // Implementation choice: Apply immediately for text boxes usually annoying, but let's stick to "Apply" button pattern for Advanced
+            // Actually, in ProductsPage we wait for Apply. Here we have Apply button in flyout.
+        }
+
+        private void HighValueFilter_Click(object sender, RoutedEventArgs e)
+        {
+            MinAmountBox.Text = "1000000";
+            MaxAmountBox.Text = "";
+            ApplyFilters();
+        }
+
+        private void CancelledFilter_Click(object sender, RoutedEventArgs e)
+        {
+            // This overlaps with status pills but provides a quick way inside the advanced menu
+            // We can set the status pill programmatically
+            _selectedStatus = OrderStatus.Cancelled;
+            UpdateStatusPills();
+            ApplyFilters();
+        }
+
+        private void ClearFilters_Click(object sender, RoutedEventArgs e)
+        {
+            SearchBox.Text = "";
+            FromDatePicker.Date = null;
+            ToDatePicker.Date = null;
+            MinAmountBox.Text = "";
+            MaxAmountBox.Text = "";
+            _selectedStatus = null;
+            SortComboBox.SelectedIndex = 0; // Default Newest
+            UpdateStatusPills();
+            ApplyFilters();
+        }
+
+        private void ApplyAdvancedFilters_Click(object sender, RoutedEventArgs e)
+        {
             ApplyFilters();
         }
 
