@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Microsoft.Extensions.DependencyInjection;
 using Project_MyShop_2025.Core.Services.Interfaces;
+using System.Collections.ObjectModel;
 
 namespace Project_MyShop_2025.Views
 {
@@ -33,6 +34,8 @@ namespace Project_MyShop_2025.Views
         private string _sortBy = "DateDesc";
         private IPrintService _printService;
         private Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService _autoSaveService;
+        private ICustomerService _customerService;
+        private IPromotionService _promotionService;
 
         public OrdersPage()
         {
@@ -50,6 +53,8 @@ namespace Project_MyShop_2025.Views
             {
                 _printService = app.Services.GetService<IPrintService>();
                 _autoSaveService = app.Services.GetService<Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService>();
+                _customerService = app.Services.GetService<ICustomerService>();
+                _promotionService = app.Services.GetService<IPromotionService>();
             }
         }
 
@@ -480,36 +485,7 @@ namespace Project_MyShop_2025.Views
             await ShowCreateOrderDialog();
         }
 
-        private async void PrintOrder_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.Tag is string orderIdStr)
-            {
-                var orderId = int.Parse(orderIdStr.Replace("#", ""));
-                var order = await _context.Orders
-                    .Include(o => o.Items)
-                        .ThenInclude(i => i.Product)
-                    .FirstOrDefaultAsync(o => o.Id == orderId);
 
-                if (order != null && _printService != null)
-                {
-                    if (_printService.IsPrintingSupported)
-                    {
-                        await _printService.PrintOrderAsync(order);
-                    }
-                    else
-                    {
-                        var dialog = new ContentDialog
-                        {
-                            Title = "Printing Not Supported",
-                            Content = "Printing is not supported on this device or configuration.",
-                            CloseButtonText = "OK",
-                            XamlRoot = this.XamlRoot
-                        };
-                        await dialog.ShowAsync();
-                    }
-                }
-            }
-        }
 
         // Dialog Methods
         private async Task ShowOrderDetails(int orderId)
@@ -596,6 +572,36 @@ namespace Project_MyShop_2025.Views
 
             dialog.Content = new ScrollViewer { Content = content, MaxHeight = 500 };
             await dialog.ShowAsync();
+        }
+
+        private async void PrintOrder_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string orderIdStr && int.TryParse(orderIdStr, out int orderId))
+            {
+                var order = await _context.Orders
+                    .Include(o => o.Items)
+                        .ThenInclude(i => i.Product)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
+
+                if (order != null && _printService != null)
+                {
+                    if (_printService.IsPrintingSupported)
+                    {
+                        await _printService.PrintOrderAsync(order);
+                    }
+                    else
+                    {
+                        var dialog = new ContentDialog
+                        {
+                            Title = "Printing Not Supported",
+                            Content = "Printing is not supported on this device.",
+                            CloseButtonText = "OK",
+                            XamlRoot = this.XamlRoot
+                        };
+                        await dialog.ShowAsync();
+                    }
+                }
+            }
         }
 
         private async Task ShowEditOrderDialog(int orderId)
@@ -713,62 +719,201 @@ namespace Project_MyShop_2025.Views
                 PrimaryButtonText = "Create",
                 CloseButtonText = "Cancel",
                 XamlRoot = this.XamlRoot,
-                MaxWidth = 700
+                MaxWidth = 800
             };
 
-            var nameBox = new TextBox { Header = "Customer Name", Margin = new Thickness(0, 8, 0, 0) };
-            var phoneBox = new TextBox { Header = "Customer Phone", Margin = new Thickness(0, 8, 0, 0) };
-            var addressBox = new TextBox { Header = "Customer Address", Margin = new Thickness(0, 8, 0, 0), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap };
+            var rootGrid = new Grid();
+            rootGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Left: Customer
+            rootGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(20) });
+            rootGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.5, GridUnitType.Star) }); // Right: Products
+            
+            // --- Left Column: Customer & Info ---
+            var leftPanel = new StackPanel { Spacing = 12 };
+            Grid.SetColumn(leftPanel, 0);
 
-            var productsList = new ListView { Header = "Select Products", MaxHeight = 300, SelectionMode = Microsoft.UI.Xaml.Controls.ListViewSelectionMode.Multiple };
+            // Customer Search
+            var searchBox = new AutoSuggestBox 
+            { 
+                Header = "Search Customer (Name/Phone)", 
+                PlaceholderText = "Type to search...",
+                QueryIcon = new SymbolIcon(Symbol.Find),
+                DisplayMemberPath = "Name" // Assumes binding to Customer object
+            };
+            
+            var nameBox = new TextBox { Header = "Customer Name" };
+            var phoneBox = new TextBox { Header = "Phone Number" };
+            var addressBox = new TextBox { Header = "Address", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Height = 60 };
+
+            Customer? selectedCustomer = null;
+
+            searchBox.TextChanged += async (s, args) => 
+            {
+                if ((int)args.Reason == 0) // AutoSuggestBoxTextChangedReason.UserInput
+                {
+                    if (string.IsNullOrWhiteSpace(s.Text)) 
+                    {
+                        s.ItemsSource = null;
+                        return;
+                    }
+                    if (s.Text.Length < 2) return;
+
+                    var criteria = new Project_MyShop_2025.Core.Services.Interfaces.CustomerSearchCriteria 
+                    { 
+                        Keyword = s.Text, 
+                        PageSize = 5 
+                    };
+                    var result = await _customerService.GetCustomersAsync(criteria);
+                    s.ItemsSource = result.Items;
+                }
+            };
+
+            searchBox.SuggestionChosen += (s, args) => 
+            {
+                if (args.SelectedItem is Customer c)
+                {
+                    selectedCustomer = c;
+                    nameBox.Text = c.Name;
+                    phoneBox.Text = c.Phone;
+                    addressBox.Text = c.Address ?? "";
+                }
+            };
+            
+            // Clear selected customer if name/phone manually edited to avoid mismatch
+            TextChangedEventHandler clearCustomerHandler = (s, e) => { /* Optional: Logic to clear selectedCustomer if mismatch */ };
+            nameBox.TextChanged += clearCustomerHandler;
+
+            leftPanel.Children.Add(searchBox);
+            leftPanel.Children.Add(new MenuFlyoutSeparator { Margin = new Thickness(0, 10, 0, 10)});
+            leftPanel.Children.Add(nameBox);
+            leftPanel.Children.Add(phoneBox);
+            leftPanel.Children.Add(addressBox);
+
+
+            // --- Right Column: Products & Cart ---
+            var rightPanel = new StackPanel { Spacing = 12 };
+            Grid.SetColumn(rightPanel, 2);
+
+            // Product Selection
+            var productsHeader = new TextBlock { Text = "Add Products", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
+            var productsList = new ListView { Height = 200, SelectionMode = ListViewSelectionMode.Multiple, BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray), BorderThickness = new Thickness(1) };
+            
+            // Load products
             var products = await _context.Products.ToListAsync();
             productsList.ItemsSource = products;
             
             var xaml = @"<DataTemplate xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">
-                <TextBlock Text=""{Binding Name}"" Margin=""8,4,0,4"" VerticalAlignment=""Center""/>
+                <Grid Padding=""8"">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width=""*"" />
+                        <ColumnDefinition Width=""Auto"" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text=""{Binding Name}"" FontWeight=""Medium"" />
+                    <TextBlock Grid.Column=""1"" Text=""{Binding Price, StringFormat='{}{0:N0}₫'}"" Foreground=""Gray"" Margin=""10,0,0,0""/>
+                </Grid>
             </DataTemplate>";
             productsList.ItemTemplate = (DataTemplate)XamlReader.Load(xaml);
 
-            var quantityBox = new TextBox { Header = "Quantity", Text = "1", Margin = new Thickness(0, 8, 0, 0) };
-            var priceBox = new TextBox { Header = "Unit Price", Text = "0", Margin = new Thickness(0, 8, 0, 0) };
+            // Controls for adding
+            var controlsPanel = new Grid();
+            controlsPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Qty
+            controlsPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10) });
+            controlsPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Price
+            controlsPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10) });
+            controlsPanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Add Btn
 
-            var selectedProducts = new List<(Product product, int quantity, int price)>();
+            var quantityBox = new TextBox { Header = "Qty", Text = "1" };
+            Grid.SetColumn(quantityBox, 0);
+            var priceBox = new TextBox { Header = "Price Override", PlaceholderText = "Default" };
+            Grid.SetColumn(priceBox, 2);
+            var addItemButton = new Button { Content = "Add Item", VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0,0,0,1) };
+            Grid.SetColumn(addItemButton, 4);
 
-            var addItemButton = new Button { Content = "Add Item", Margin = new Thickness(0, 8, 0, 0) };
-            var itemsListView = new ListView { Header = "Order Items", MaxHeight = 200 };
+            controlsPanel.Children.Add(quantityBox);
+            controlsPanel.Children.Add(priceBox);
+            controlsPanel.Children.Add(addItemButton);
 
-            // Load Draft
-            if (_autoSaveService != null)
+            // Cart Items
+            var cartHeader = new TextBlock { Text = "Order Items", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0,10,0,0) };
+            var itemsListView = new ListView { Height = 150, Background = new SolidColorBrush(Microsoft.UI.Colors.WhiteSmoke), BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.LightGray), BorderThickness = new Thickness(1) };
+
+            var selectedProducts = new System.Collections.ObjectModel.ObservableCollection<(Product product, int quantity, int price)>();
+            itemsListView.ItemsSource = selectedProducts; // Needs a template or string projection? We'll maintain a parallel list for display string? 
+            // Better: use an ObservableCollection of ViewModel/DTO
+            // For quick impl, let's use list of strings for display
+            var cartDisplayList = new System.Collections.ObjectModel.ObservableCollection<string>();
+            itemsListView.ItemsSource = cartDisplayList;
+
+            addItemButton.Click += (s, e) =>
             {
-                var draft = await _autoSaveService.LoadDraftAsync<OrderDraft>("Draft_Order");
-                if (draft != null)
+                if (productsList.SelectedItems != null && productsList.SelectedItems.Count > 0)
                 {
-                    nameBox.Text = draft.CustomerName ?? "";
-                    phoneBox.Text = draft.CustomerPhone ?? "";
-                    addressBox.Text = draft.CustomerAddress ?? "";
-                    
-                    if (draft.Items != null && draft.Items.Any())
+                    foreach (Product selectedProduct in productsList.SelectedItems)
                     {
-                        foreach (var item in draft.Items)
-                        {
-                            var prod = products.FirstOrDefault(p => p.Id == item.ProductId);
-                            if (prod != null)
-                            {
-                                selectedProducts.Add((prod, item.Quantity, item.Price));
-                            }
-                        }
+                         // Check if already added? (Simple logic: allow duplicates or sum quantity?)
+                         // Let's create new line for simplicity
+                        var qty = int.TryParse(quantityBox.Text, out int q) ? q : 1;
+                        var price = int.TryParse(priceBox.Text, out int p) ? p : selectedProduct.Price;
                         
-                        itemsListView.ItemsSource = selectedProducts.Select(sp => $"{sp.product.Name} x{sp.quantity} @ ₫{sp.price:N0}").ToList();
+                        selectedProducts.Add((selectedProduct, qty, price));
+                        cartDisplayList.Add($"{selectedProduct.Name} x{qty} @ ₫{price:N0} = ₫{qty*price:N0}");
                     }
+                    
+                    // Trigger draft save
+                     if (_autoSaveService != null) { _ = SaveOrderDraft(); }
                 }
+            };
 
-                TextChangedEventHandler textHandler = async (s, e) => { await SaveOrderDraft(); };
-                nameBox.TextChanged += textHandler;
-                phoneBox.TextChanged += textHandler;
-                addressBox.TextChanged += textHandler;
-            }
+            // Promotion Section
+            var promoHeader = new TextBlock { Text = "Promotion", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0,10,0,0) };
+            var promoPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            var promoCodeBox = new TextBox { PlaceholderText = "Code", Width = 120 };
+            var applyPromoBtn = new Button { Content = "Apply" };
+            var promoStatusText = new TextBlock { VerticalAlignment = VerticalAlignment.Center, FontSize = 12 };
+            
+            Promotion? selectedPromotion = null;
 
-            async Task SaveOrderDraft()
+            applyPromoBtn.Click += async (s, e) => {
+                var code = promoCodeBox.Text;
+                if (string.IsNullOrWhiteSpace(code)) return;
+                
+                int subTotal = selectedProducts.Sum(x => x.quantity * x.price);
+                var valid = await _promotionService.ValidateCodeAsync(code, subTotal);
+                
+                if (valid != null)
+                {
+                    selectedPromotion = valid;
+                    int discount = await _promotionService.CalculateDiscountAsync(code, subTotal);
+                    promoStatusText.Text = $"Valid: -{discount:N0}₫";
+                    promoStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.Green);
+                }
+                else
+                {
+                    selectedPromotion = null;
+                    promoStatusText.Text = "Invalid Code";
+                    promoStatusText.Foreground = new SolidColorBrush(Microsoft.UI.Colors.Red);
+                }
+            };
+
+            promoPanel.Children.Add(promoCodeBox);
+            promoPanel.Children.Add(applyPromoBtn);
+            promoPanel.Children.Add(promoStatusText);
+
+            rightPanel.Children.Add(productsHeader);
+            rightPanel.Children.Add(productsList);
+            rightPanel.Children.Add(controlsPanel);
+            rightPanel.Children.Add(cartHeader);
+            rightPanel.Children.Add(itemsListView);
+            rightPanel.Children.Add(promoHeader);
+            rightPanel.Children.Add(promoPanel);
+            
+            // Assemble Grid
+            rootGrid.Children.Add(leftPanel);
+            rootGrid.Children.Add(rightPanel);
+            
+            dialog.Content = rootGrid;
+
+            // Load Draft Logic (Adapted)
+             async Task SaveOrderDraft()
             {
                 if (_autoSaveService == null) return;
                 var draft = new OrderDraft
@@ -785,77 +930,112 @@ namespace Project_MyShop_2025.Views
                 };
                 await _autoSaveService.SaveDraftAsync("Draft_Order", draft);
             }
-
-            addItemButton.Click += (s, e) =>
+            // (Initial Load Draft logic could be added here similar to before, checking _autoSaveService)
+            if (_autoSaveService != null)
             {
-                if (productsList.SelectedItems != null && productsList.SelectedItems.Count > 0)
-                {
-                    foreach (Product selectedProduct in productsList.SelectedItems)
-                    {
-                        if (!selectedProducts.Any(sp => sp.product.Id == selectedProduct.Id))
-                        {
-                            var qty = int.TryParse(quantityBox.Text, out int q) ? q : 1;
-                            var price = int.TryParse(priceBox.Text, out int p) ? p : selectedProduct.Price;
-                            selectedProducts.Add((selectedProduct, qty, price));
-                        }
-                    }
-                    itemsListView.ItemsSource = selectedProducts.Select(sp => $"{sp.product.Name} x{sp.quantity} @ ₫{sp.price:N0}").ToList();
-                    
-                    // Save draft
-                    if (_autoSaveService != null)
-                    {
-                        _ = SaveOrderDraft();
-                    }
-                }
-            };
+                 var draft = await _autoSaveService.LoadDraftAsync<OrderDraft>("Draft_Order");
+                 if (draft != null)
+                 {
+                     nameBox.Text = draft.CustomerName ?? "";
+                     phoneBox.Text = draft.CustomerPhone ?? "";
+                     addressBox.Text = draft.CustomerAddress ?? "";
+                     if (draft.Items != null)
+                     {
+                         foreach(var item in draft.Items)
+                         {
+                             var p = products.FirstOrDefault(x => x.Id == item.ProductId);
+                             if (p != null) {
+                                 selectedProducts.Add((p, item.Quantity, item.Price));
+                                 cartDisplayList.Add($"{p.Name} x{item.Quantity} @ ₫{item.Price:N0} = ₫{item.Quantity*item.Price:N0}");
+                             }
+                         }
+                     }
+                 }
+                 
+                TextChangedEventHandler textHandler = async (s, e) => { await SaveOrderDraft(); };
+                nameBox.TextChanged += textHandler;
+                phoneBox.TextChanged += textHandler;
+                addressBox.TextChanged += textHandler;
+            }
 
-            var content = new StackPanel { Spacing = 8 };
-            content.Children.Add(nameBox);
-            content.Children.Add(phoneBox);
-            content.Children.Add(addressBox);
-            content.Children.Add(productsList);
-            content.Children.Add(quantityBox);
-            content.Children.Add(priceBox);
-            content.Children.Add(addItemButton);
-            content.Children.Add(itemsListView);
-
-            dialog.Content = new ScrollViewer { Content = content, MaxHeight = 500 };
 
             var result = await dialog.ShowAsync();
 
             if (result == ContentDialogResult.Primary && selectedProducts.Any())
             {
-                var order = new Order
+                // Create Order
+                var newOrder = new Order
                 {
                     CustomerName = nameBox.Text,
                     CustomerPhone = phoneBox.Text,
                     CustomerAddress = addressBox.Text,
                     CreatedAt = DateTime.Now,
-                    Status = OrderStatus.Created,
-                    TotalPrice = 0
+                    Status = OrderStatus.Created
                 };
 
-                foreach (var (product, quantity, price) in selectedProducts)
+                // Link Customer
+                if (selectedCustomer != null)
                 {
-                    var orderItem = new OrderItem
+                    newOrder.CustomerId = selectedCustomer.Id;
+                }
+                else if (!string.IsNullOrWhiteSpace(newOrder.CustomerPhone))
+                {
+                    // Try find by phone or create
+                    var existing = await _customerService.GetCustomerByPhoneAsync(newOrder.CustomerPhone);
+                    if (existing != null)
                     {
-                        ProductId = product.Id,
-                        Quantity = quantity,
-                        Price = price,
-                        TotalPrice = quantity * price
-                    };
-                    order.Items.Add(orderItem);
-                    order.TotalPrice += orderItem.TotalPrice;
+                        newOrder.CustomerId = existing.Id;
+                    }
+                    else
+                    {
+                        // Auto-create customer?
+                        var newC = new Customer 
+                        { 
+                            Name = newOrder.CustomerName ?? "Guest", 
+                            Phone = newOrder.CustomerPhone,
+                            Address = newOrder.CustomerAddress
+                        };
+                        var created = await _customerService.CreateCustomerAsync(newC);
+                        newOrder.CustomerId = created.Id;
+                    }
                 }
 
-                _context.Orders.Add(order);
+                // Add Items
+                foreach (var sp in selectedProducts)
+                {
+                    newOrder.Items.Add(new OrderItem
+                    {
+                        ProductId = sp.product.Id,
+                        Product = null, // EF will resolve
+                        Quantity = sp.quantity,
+                        Price = sp.price,
+                        TotalPrice = sp.quantity * sp.price
+                    });
+                }
+                
+                // Promotion
+                if (selectedPromotion != null)
+                {
+                    newOrder.PromotionId = selectedPromotion.Id;
+                    newOrder.Promotion = selectedPromotion; // For immediate calculation
+                }
+                
+                newOrder.CalculateTotals();
+                // Ensure PromotionId is set effectively for DB
+                newOrder.Promotion = null; // Avoid EF trying to add new Promotion
+                if (selectedPromotion != null) newOrder.PromotionId = selectedPromotion.Id;
+
+                _context.Orders.Add(newOrder);
                 await _context.SaveChangesAsync();
                 
-                // Clear Draft
-                if (_autoSaveService != null)
+                // Apply Promotion usage count
+                if (selectedPromotion != null)
                 {
-                    await _autoSaveService.ClearDraftAsync("Draft_Order");
+                    await _promotionService.ApplyPromotionAsync(selectedPromotion.Id);
                 }
+
+                // Clear draft
+                 if (_autoSaveService != null) await _autoSaveService.ClearDraftAsync("Draft_Order");
 
                 await LoadOrders();
             }

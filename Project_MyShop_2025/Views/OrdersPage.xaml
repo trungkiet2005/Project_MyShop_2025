@@ -298,6 +298,12 @@
                                     </Button>
                                     <Button Background="Transparent" BorderThickness="0" 
                                             Padding="10" CornerRadius="6"
+                                            Click="PrintOrder_Click" Tag="{Binding OrderId}"
+                                            ToolTipService.ToolTip="Print invoice">
+                                        <FontIcon Glyph="&#xE749;" FontSize="16" Foreground="#64748B"/>
+                                    </Button>
+                                    <Button Background="Transparent" BorderThickness="0" 
+                                            Padding="10" CornerRadius="6"
                                             Click="UpdateStatus_Click" Tag="{Binding OrderId}"
                                             ToolTipService.ToolTip="Update status">
                                         <FontIcon Glyph="&#xE8A5;" FontSize="16" Foreground="#10B981"/>

@@ -13,6 +13,8 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using MiniExcelLibs;
+using System.IO;
 
 namespace Project_MyShop_2025.Views
 {
@@ -529,10 +531,7 @@ namespace Project_MyShop_2025.Views
             await ShowAddCategoryDialog();
         }
 
-        private async void ImportButton_Click(object sender, RoutedEventArgs e)
-        {
-            await ShowImportDialog();
-        }
+
 
         private void ProductCard_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
@@ -785,14 +784,16 @@ namespace Project_MyShop_2025.Views
             }
         }
 
-        private async Task ShowImportDialog()
+
+
+        private async void ImportButton_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new ContentDialog
             {
                 Title = "Import Products",
-                Content = "Choose file format to import:",
-                PrimaryButtonText = "Excel",
-                SecondaryButtonText = "Access",
+                Content = "Choose an import source:",
+                PrimaryButtonText = "Excel (.xlsx)",
+                SecondaryButtonText = "Access (.mdb, .accdb)",
                 CloseButtonText = "Cancel",
                 XamlRoot = this.XamlRoot
             };
@@ -822,15 +823,96 @@ namespace Project_MyShop_2025.Views
             var file = await picker.PickSingleFileAsync();
             if (file != null)
             {
-                var notImplementedDialog = new ContentDialog
+                try
                 {
-                    Title = "Import from Excel",
-                    Content = $"Excel import functionality will process: {file.Name}\n\nThis feature requires implementation of Excel parsing logic.",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await notImplementedDialog.ShowAsync();
+                    // Copy to temp to avoid locking if open
+                    var tempPath = Path.GetTempFileName() + Path.GetExtension(file.Path);
+                    await file.CopyAndReplaceAsync(await StorageFile.GetFileFromPathAsync(tempPath));
+
+                    var rows = MiniExcel.Query(tempPath).ToList();
+                    int successCount = 0;
+                    
+                    // Assume columns: Name, SKU, Price, Quantity
+                    // Simple logic: Create new Category "Imported" if not exists
+                    var importedCategory = await _context.Categories.FirstOrDefaultAsync(c => c.Name == "Imported");
+                    if (importedCategory == null)
+                    {
+                        importedCategory = new Category { Name = "Imported", Description = "Imported from Excel" };
+                        _context.Categories.Add(importedCategory);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    foreach (var row in rows)
+                    {
+                        // MiniExcel returns dynamic by default
+                        var d = (IDictionary<string, object>)row;
+                        
+                        // Basic validation - check if keys exist (case insensitive usually needed or rely on exact header)
+                        // Assuming Headers: Name, SKU, Price, Quantity
+                        
+                        string name = GetValue(d, "Name");
+                        if (string.IsNullOrEmpty(name)) continue;
+
+                        string sku = GetValue(d, "SKU") ?? $"IMP-{Guid.NewGuid().ToString().Substring(0,8)}";
+                        
+                        if (await _context.Products.AnyAsync(p => p.SKU == sku)) continue; // Skip duplicates
+
+                        var product = new Product
+                        {
+                            Name = name,
+                            SKU = sku,
+                            Description = GetValue(d, "Description") ?? "Imported Product",
+                            Price = ParseInt(GetValue(d, "Price")),
+                            ImportPrice = ParseInt(GetValue(d, "ImportPrice")),
+                            Quantity = ParseInt(GetValue(d, "Quantity")),
+                            CategoryId = importedCategory.Id
+                        };
+
+                        _context.Products.Add(product);
+                        successCount++;
+                    }
+
+                    await _context.SaveChangesAsync();
+                     
+                    // Clean temp
+                    if (File.Exists(tempPath)) File.Delete(tempPath);
+
+                    await LoadProducts();
+                    
+                    var successDialog = new ContentDialog
+                    {
+                        Title = "Import Successful",
+                        Content = $"Successfully imported {successCount} products.",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await successDialog.ShowAsync();
+                }
+                catch (Exception ex)
+                {
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Import Failed",
+                        Content = $"Error importing Excel: {ex.Message}",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
             }
+        }
+
+        private string GetValue(IDictionary<string, object> row, string key)
+        {
+            // Case-insensitive key lookup
+            var k = row.Keys.FirstOrDefault(x => x.Equals(key, StringComparison.OrdinalIgnoreCase));
+            return k != null && row[k] != null ? row[k].ToString() : null;
+        }
+
+        private int ParseInt(string val)
+        {
+            if (int.TryParse(val, out int result)) return result;
+            return 0;
         }
 
         private async Task ImportFromAccess()

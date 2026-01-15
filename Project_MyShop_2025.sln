@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11312.210 d18.3
+VisualStudioVersion = 18.3.11312.210
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Project_MyShop_2025", "Project_MyShop_2025\Project_MyShop_2025.csproj", "{787A114C-96FB-4DDA-9BEC-BFF95354A07B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Project_MyShop_2025.Core", "Project_MyShop_2025.Core\Project_MyShop_2025.Core.csproj", "{A07F3762-A967-4141-98FA-28C9FCEAA00F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Project_MyShop_2025.Tests", "Project_MyShop_2025.Tests\Project_MyShop_2025.Tests.csproj", "{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,22 @@ Global
 		{A07F3762-A967-4141-98FA-28C9FCEAA00F}.Release|x64.Build.0 = Release|Any CPU
 		{A07F3762-A967-4141-98FA-28C9FCEAA00F}.Release|x86.ActiveCfg = Release|Any CPU
 		{A07F3762-A967-4141-98FA-28C9FCEAA00F}.Release|x86.Build.0 = Release|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Debug|x64.Build.0 = Debug|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Debug|x86.Build.0 = Debug|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Release|ARM64.Build.0 = Release|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Release|x64.ActiveCfg = Release|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Release|x64.Build.0 = Release|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Release|x86.ActiveCfg = Release|Any CPU
+		{C0D47A9F-14CA-4759-A70C-FC97E258CB6E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
