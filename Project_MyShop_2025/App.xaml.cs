@@ -85,6 +85,11 @@ namespace Project_MyShop_2025
             // Window & ViewModels
             services.AddTransient<MainWindow>();
             services.AddTransient<ViewModels.MainViewModel>();
+            
+            // MVVM ViewModels - Transient để tạo mới mỗi lần navigate
+            services.AddTransient<ViewModels.DashboardViewModel>();
+            services.AddTransient<ViewModels.ProductsViewModel>();
+            services.AddTransient<ViewModels.OrdersViewModel>();
 
             // Database Context
             services.AddDbContext<Project_MyShop_2025.Core.Data.ShopDbContext>(options =>
