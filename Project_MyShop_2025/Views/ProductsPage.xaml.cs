@@ -160,7 +160,8 @@ namespace Project_MyShop_2025.Views
             if (!string.IsNullOrWhiteSpace(searchText))
             {
                 _filteredProducts = _filteredProducts
-                    .Where(p => p.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                    .Where(p => p.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                               (p.SKU != null && p.SKU.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
                     .ToList();
             }
 
@@ -173,6 +174,19 @@ namespace Project_MyShop_2025.Views
             if (int.TryParse(MaxPriceBox.Text, out int maxPrice))
             {
                 _filteredProducts = _filteredProducts.Where(p => p.Price <= maxPrice).ToList();
+            }
+
+            // Stock range filter (Advanced Search)
+            if (MinStockBox != null && !double.IsNaN(MinStockBox.Value))
+            {
+                var minStock = (int)MinStockBox.Value;
+                _filteredProducts = _filteredProducts.Where(p => p.Quantity >= minStock).ToList();
+            }
+
+            if (MaxStockBox != null && !double.IsNaN(MaxStockBox.Value))
+            {
+                var maxStock = (int)MaxStockBox.Value;
+                _filteredProducts = _filteredProducts.Where(p => p.Quantity <= maxStock).ToList();
             }
 
             // Apply sorting
@@ -390,6 +404,59 @@ namespace Project_MyShop_2025.Views
         }
 
         private void PriceFilter_Changed(object sender, TextChangedEventArgs e)
+        {
+            // Don't apply immediately - wait for Apply button
+        }
+
+        /// <summary>
+        /// Apply price filter when user clicks the Apply button.
+        /// </summary>
+        private void ApplyPriceFilter_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
+        /// <summary>
+        /// Quick filter: Show only products with stock less than 5.
+        /// </summary>
+        private void LowStockFilter_Click(object sender, RoutedEventArgs e)
+        {
+            MinStockBox.Value = 1;
+            MaxStockBox.Value = 4;
+            ApplyFilters();
+        }
+
+        /// <summary>
+        /// Quick filter: Show only products that are out of stock.
+        /// </summary>
+        private void OutOfStockFilter_Click(object sender, RoutedEventArgs e)
+        {
+            MinStockBox.Value = 0;
+            MaxStockBox.Value = 0;
+            ApplyFilters();
+        }
+
+        /// <summary>
+        /// Clear all filters and reset to default view.
+        /// </summary>
+        private void ClearFilters_Click(object sender, RoutedEventArgs e)
+        {
+            SearchBox.Text = string.Empty;
+            MinPriceBox.Text = string.Empty;
+            MaxPriceBox.Text = string.Empty;
+            MinStockBox.Value = double.NaN;
+            MaxStockBox.Value = double.NaN;
+            _selectedCategoryId = null;
+            CategoryComboBox.SelectedIndex = 0;
+            SortComboBox.SelectedIndex = 0;
+            UpdateCategoryPills();
+            ApplyFilters();
+        }
+
+        /// <summary>
+        /// Apply all advanced filters.
+        /// </summary>
+        private void ApplyAdvancedFilters_Click(object sender, RoutedEventArgs e)
         {
             ApplyFilters();
         }
