@@ -101,6 +101,8 @@ namespace Project_MyShop_2025
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IDatabaseService, DatabaseService>();
+            services.AddScoped<ICustomerService, CustomerService>();
+            services.AddScoped<IPromotionService, PromotionService>();
         }
 
         /// <summary>
