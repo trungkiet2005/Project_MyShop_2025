@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Project_MyShop_2025.Views.PromotionsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Project_MyShop_2025.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="#F8FAFC">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: Page Header -->
+        <Border Grid.Row="0" Background="White" Padding="24,20" 
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: Title & Count -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                    <TextBlock Text="Promotions &amp; Discounts" FontSize="24" FontWeight="Bold" Foreground="#0F172A"/>
+                    <Border Background="#FEF3C7" CornerRadius="16" Padding="12,6" VerticalAlignment="Center">
+                        <TextBlock x:Name="ResultsCountText" Text="0 promotions" FontSize="13" 
+                                   Foreground="#D97706" FontWeight="SemiBold"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- Right: Add Promotion Button -->
+                <Button x:Name="AddPromotionButton" Grid.Column="2" Click="AddPromotionButton_Click" 
+                        Background="#D97706" Foreground="White" CornerRadius="8" Padding="16,10">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE8E5;" FontSize="16"/>
+                        <TextBlock Text="New Promotion" FontSize="13" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Row 1: Filter Tabs -->
+        <Border Grid.Row="1" Background="#FFFFFF" Padding="24,16" 
+                BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Button x:Name="AllTab" Content="All Promotions" Click="FilterTab_Click" Tag="All"
+                        Background="#3B82F6" Foreground="White" CornerRadius="20" Padding="16,8"/>
+                <Button x:Name="ActiveTab" Content="Active" Click="FilterTab_Click" Tag="Active"
+                        Background="#F1F5F9" Foreground="#475569" CornerRadius="20" Padding="16,8"/>
+                <Button x:Name="ExpiredTab" Content="Expired" Click="FilterTab_Click" Tag="Expired"
+                        Background="#F1F5F9" Foreground="#475569" CornerRadius="20" Padding="16,8"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Row 2: Promotions Grid -->
+        <ScrollViewer Grid.Row="2" Padding="24,20" VerticalScrollBarVisibility="Auto" 
+                      Background="#F8FAFC">
+            <ItemsControl x:Name="PromotionsGrid">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="3" 
+                                       ItemWidth="380" HorizontalAlignment="Left"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" CornerRadius="16" Margin="0,0,16,16" 
+                                BorderBrush="#E2E8F0" BorderThickness="1" Padding="0"
+                                PointerEntered="PromotionCard_PointerEntered"
+                                PointerExited="PromotionCard_PointerExited">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Header with Type Badge -->
+                                <Border Grid.Row="0" Background="{Binding TypeBackground}" 
+                                        CornerRadius="16,16,0,0" Padding="20,16">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Code}" FontSize="20" FontWeight="Bold" 
+                                                       Foreground="White"/>
+                                            <TextBlock Text="{Binding Name}" FontSize="13" 
+                                                       Foreground="White" Opacity="0.9" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Background="White" CornerRadius="8" 
+                                                Padding="12,6" VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding TypeText}" FontSize="11" 
+                                                       FontWeight="SemiBold" Foreground="{Binding TypeForeground}"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Details -->
+                                <StackPanel Grid.Row="1" Padding="20,16" Spacing="12">
+                                    <!-- Discount Value -->
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding DiscountDisplay}" FontSize="28" 
+                                                   FontWeight="Bold" Foreground="#0F172A"/>
+                                        <TextBlock Text="{Binding DiscountDescription}" FontSize="12" 
+                                                   Foreground="#64748B"/>
+                                    </StackPanel>
+
+                                    <!-- Conditions -->
+                                    <StackPanel Spacing="6">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" 
+                                                    Visibility="{Binding MinOrderVisibility}">
+                                            <FontIcon Glyph="&#xE73E;" FontSize="12" Foreground="#16A34A"/>
+                                            <TextBlock Text="{Binding MinOrderText}" FontSize="12" 
+                                                       Foreground="#64748B"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="6" 
+                                                    Visibility="{Binding MaxDiscountVisibility}">
+                                            <FontIcon Glyph="&#xE73E;" FontSize="12" Foreground="#16A34A"/>
+                                            <TextBlock Text="{Binding MaxDiscountText}" FontSize="12" 
+                                                       Foreground="#64748B"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="6" 
+                                                    Visibility="{Binding UsageLimitVisibility}">
+                                            <FontIcon Glyph="&#xE73E;" FontSize="12" Foreground="#16A34A"/>
+                                            <TextBlock Text="{Binding UsageLimitText}" FontSize="12" 
+                                                       Foreground="#64748B"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Date Range -->
+                                    <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon Glyph="&#xE787;" FontSize="14" Foreground="#64748B"/>
+                                            <TextBlock Text="{Binding DateRangeText}" FontSize="12" 
+                                                       Foreground="#475569"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Footer -->
+                                <Border Grid.Row="2" Background="#F8FAFC" Padding="16,12" 
+                                        CornerRadius="0,0,16,16" BorderBrush="#E2E8F0" 
+                                        BorderThickness="0,1,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Status -->
+                                        <Border Background="{Binding StatusBackground}" CornerRadius="6" 
+                                                Padding="10,4" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" 
+                                                       FontWeight="SemiBold" Foreground="{Binding StatusForeground}"/>
+                                        </Border>
+
+                                        <!-- Actions -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                            <Button Background="Transparent" BorderThickness="0" 
+                                                    Padding="8" CornerRadius="6"
+                                                    Click="EditPromotion_Click" Tag="{Binding Id}"
+                                                    ToolTipService.ToolTip="Edit">
+                                                <FontIcon Glyph="&#xE70F;" FontSize="14" Foreground="#F59E0B"/>
+                                            </Button>
+                                            <Button Background="Transparent" BorderThickness="0" 
+                                                    Padding="8" CornerRadius="6"
+                                                    Click="DeletePromotion_Click" Tag="{Binding Id}"
+                                                    ToolTipService.ToolTip="Delete">
+                                                <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="#EF4444"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</Page>

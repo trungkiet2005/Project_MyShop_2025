@@ -73,6 +73,12 @@ namespace Project_MyShop_2025.Views
                 case "Orders":
                     ContentFrame.Navigate(typeof(OrdersPage));
                     break;
+                case "Customers":
+                    ContentFrame.Navigate(typeof(CustomersPage));
+                    break;
+                case "Promotions":
+                    ContentFrame.Navigate(typeof(PromotionsPage));
+                    break;
                 case "Reports":
                     ContentFrame.Navigate(typeof(ReportsPage));
                     break;

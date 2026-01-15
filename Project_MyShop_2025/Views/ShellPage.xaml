@@ -24,6 +24,16 @@
                 <NavigationViewItem Content="Dashboard" Tag="Dashboard" Icon="Home"/>
                 <NavigationViewItem Content="Products" Tag="Products" Icon="Shop"/>
                 <NavigationViewItem Content="Orders" Tag="Orders" Icon="List"/>
+                <NavigationViewItem Content="Customers" Tag="Customers">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE77B;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Promotions" Tag="Promotions">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8E5;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="Reports" Tag="Reports" Icon="Document"/>
                 <NavigationViewItem Content="AI Assistant" Tag="Chatbot">
                     <NavigationViewItem.Icon>
