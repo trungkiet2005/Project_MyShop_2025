@@ -18,6 +18,8 @@ using Windows.Foundation.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Windows.Storage;
+using Project_MyShop_2025.Core.Services.Interfaces;
+using Project_MyShop_2025.Core.Services.Implementations;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -32,8 +34,7 @@ namespace Project_MyShop_2025
         public Window? Window { get; private set; }
 
         /// <summary>
-        /// Initializes the singleton application object.  This is the first line of authored code
-        /// executed, and as such is the logical equivalent of main() or WinMain().
+        /// Gets the service provider for dependency injection.
         /// </summary>
         public IServiceProvider Services { get; private set; }
 
@@ -81,9 +82,11 @@ namespace Project_MyShop_2025
 
         private void ConfigureServices(IServiceCollection services)
         {
+            // Window & ViewModels
             services.AddTransient<MainWindow>();
             services.AddTransient<ViewModels.MainViewModel>();
 
+            // Database Context
             services.AddDbContext<Project_MyShop_2025.Core.Data.ShopDbContext>(options =>
             {
                 var connectionString = Project_MyShop_2025.Core.Data.DatabasePathHelper.GetConnectionString();
@@ -91,6 +94,13 @@ namespace Project_MyShop_2025
                 // Suppress pending model changes warning - we'll use EnsureCreated instead
                 options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
+
+            // Business Services - Scoped để share context trong một request
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IDatabaseService, DatabaseService>();
         }
 
         /// <summary>
