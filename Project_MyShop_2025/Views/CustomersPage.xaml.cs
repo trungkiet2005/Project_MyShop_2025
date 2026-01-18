@@ -30,11 +30,11 @@ namespace Project_MyShop_2025.Views
 
         public CustomersPage()
         {
-            this.InitializeComponent();
-            
             var app = (App)Application.Current;
             _customerService = app.Services.GetRequiredService<ICustomerService>();
             _localSettings = ApplicationData.Current.LocalSettings;
+
+            this.InitializeComponent();
             
             LoadPageSizeFromSettings();
             Loaded += CustomersPage_Loaded;
@@ -77,7 +77,7 @@ namespace Project_MyShop_2025.Views
                     PageSize = _pageSize == -1 ? int.MaxValue : _pageSize
                 };
 
-                var result = await _customerService.GetCustomersAsync(criteria);
+                ùnvar result = await _customerService.GetCustomersAsync(criteria);
                 
                 var displayModels = new List<CustomerDisplayModel>();
                 foreach (var customer in result.Items)
@@ -161,7 +161,10 @@ namespace Project_MyShop_2025.Views
                 if (int.TryParse(item.Tag?.ToString(), out int pageSize))
                 {
                     _pageSize = pageSize;
-                    _localSettings.Values["CustomersPageSize"] = _pageSize;
+                    if (_localSettings != null)
+                    {
+                        _localSettings.Values["CustomersPageSize"] = _pageSize;
+                    }
                     _currentPage = 1;
                     await LoadCustomersAsync();
                 }
