@@ -27,6 +27,7 @@ namespace Project_MyShop_2025.Views
         private string _searchText = "";
         private string _sortBy = "NameAsc";
         private bool? _activeFilter = null;
+        private bool _isInitialized = false;
 
         public CustomersPage()
         {
@@ -42,6 +43,7 @@ namespace Project_MyShop_2025.Views
 
         private async void CustomersPage_Loaded(object sender, RoutedEventArgs e)
         {
+            _isInitialized = true;
             await LoadCustomersAsync();
         }
 
@@ -113,10 +115,15 @@ namespace Project_MyShop_2025.Views
 
         private void UpdatePagination(int totalCount)
         {
-            ResultsCountText.Text = $"{totalCount} customer{(totalCount != 1 ? "s" : "")}";
-            PageInfoText.Text = $"Page {_currentPage} of {_totalPages}";
-            PrevPageButton.IsEnabled = _currentPage > 1;
-            NextPageButton.IsEnabled = _currentPage < _totalPages;
+            // Null checks to prevent NullReferenceException during initialization
+            if (ResultsCountText != null)
+                ResultsCountText.Text = $"{totalCount} customer{(totalCount != 1 ? "s" : "")}";
+            if (PageInfoText != null)
+                PageInfoText.Text = $"Page {_currentPage} of {_totalPages}";
+            if (PrevPageButton != null)
+                PrevPageButton.IsEnabled = _currentPage > 1;
+            if (NextPageButton != null)
+                NextPageButton.IsEnabled = _currentPage < _totalPages;
         }
 
         #region Event Handlers
@@ -130,6 +137,9 @@ namespace Project_MyShop_2025.Views
 
         private async void ActiveFilter_Changed(object sender, SelectionChangedEventArgs e)
         {
+            // Don't process during initialization
+            if (!_isInitialized) return;
+
             if (ActiveFilterCombo.SelectedItem is ComboBoxItem item)
             {
                 var tag = item.Tag?.ToString();
@@ -146,6 +156,9 @@ namespace Project_MyShop_2025.Views
 
         private async void SortComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Don't process during initialization
+            if (!_isInitialized) return;
+
             if (SortComboBox.SelectedItem is ComboBoxItem item)
             {
                 _sortBy = item.Tag?.ToString() ?? "NameAsc";
@@ -156,6 +169,9 @@ namespace Project_MyShop_2025.Views
 
         private async void PageSize_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Don't process during initialization - wait until page is fully loaded
+            if (!_isInitialized) return;
+
             if (PageSizeComboBox.SelectedItem is ComboBoxItem item)
             {
                 if (int.TryParse(item.Tag?.ToString(), out int pageSize))

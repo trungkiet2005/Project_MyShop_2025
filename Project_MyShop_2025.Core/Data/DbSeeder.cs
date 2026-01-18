@@ -56,7 +56,7 @@ namespace Project_MyShop_2025.Core.Data
             {
                 var products = new List<Product>();
 
-                // --- ĐIỆN TỬ (High Value) ---
+                // --- ĐIỆN TỬ (High Value) - 22 sản phẩm ---
                 products.AddRange(new[] {
                     CreateProduct(electronics.Id, "iPhone 15 Pro Max", 29990000, 25000000, 50, "ELEC001", "Smartphone cao cấp nhất của Apple với khung titan."),
                     CreateProduct(electronics.Id, "Samsung Galaxy S24 Ultra", 27990000, 23000000, 45, "ELEC002", "Điện thoại AI tiên tiến nhất với bút S-Pen."),
@@ -65,26 +65,76 @@ namespace Project_MyShop_2025.Core.Data
                     CreateProduct(electronics.Id, "iPad Pro 12.9 M2", 25990000, 22000000, 30, "ELEC005", "Máy tính bảng mạnh mẽ thay thế laptop."),
                     CreateProduct(electronics.Id, "PlayStation 5 Slim", 14990000, 12000000, 15, "ELEC006", "Máy chơi game console thế hệ mới."),
                     CreateProduct(electronics.Id, "Dell XPS 15 9530", 35990000, 30000000, 10, "ELEC007", "Laptop Windows cao cấp màn hình OLED."),
-                    CreateProduct(electronics.Id, "Apple Watch Series 9", 9990000, 8000000, 60, "ELEC008", "Đồng hồ thông minh theo dõi sức khỏe.")
+                    CreateProduct(electronics.Id, "Apple Watch Series 9", 9990000, 8000000, 60, "ELEC008", "Đồng hồ thông minh theo dõi sức khỏe."),
+                    // Thêm 14 sản phẩm điện tử mới
+                    CreateProduct(electronics.Id, "AirPods Pro 2", 6990000, 5500000, 80, "ELEC009", "Tai nghe true wireless với ANC."),
+                    CreateProduct(electronics.Id, "Nintendo Switch OLED", 8990000, 7000000, 40, "ELEC010", "Máy chơi game cầm tay đa năng."),
+                    CreateProduct(electronics.Id, "Canon EOS R6 Mark II", 52990000, 45000000, 12, "ELEC011", "Máy ảnh mirrorless full-frame chuyên nghiệp."),
+                    CreateProduct(electronics.Id, "LG OLED TV 55 inch", 32990000, 28000000, 8, "ELEC012", "TV OLED 4K màu sắc hoàn hảo."),
+                    CreateProduct(electronics.Id, "Xiaomi Robot Vacuum", 8990000, 7000000, 25, "ELEC013", "Robot hút bụi thông minh lập bản đồ."),
+                    CreateProduct(electronics.Id, "GoPro Hero 12", 12990000, 10000000, 35, "ELEC014", "Camera hành trình chống nước 5K."),
+                    CreateProduct(electronics.Id, "Bose SoundLink Flex", 3290000, 2500000, 55, "ELEC015", "Loa bluetooth di động chống nước."),
+                    CreateProduct(electronics.Id, "Logitech MX Master 3S", 2490000, 1800000, 70, "ELEC016", "Chuột không dây cao cấp cho văn phòng."),
+                    CreateProduct(electronics.Id, "Samsung Galaxy Tab S9", 19990000, 16000000, 22, "ELEC017", "Máy tính bảng Android cao cấp."),
+                    CreateProduct(electronics.Id, "DJI Mini 3 Pro", 21990000, 18000000, 15, "ELEC018", "Flycam nhỏ gọn quay 4K."),
+                    CreateProduct(electronics.Id, "Kindle Paperwhite", 3990000, 3000000, 45, "ELEC019", "Máy đọc sách điện tử chống nước."),
+                    CreateProduct(electronics.Id, "ASUS ROG Phone 8 Pro", 24990000, 20000000, 18, "ELEC020", "Gaming phone hiệu năng khủng."),
+                    CreateProduct(electronics.Id, "Anker PowerCore 26800", 1290000, 900000, 150, "ELEC021", "Sạc dự phòng dung lượng cao."),
+                    CreateProduct(electronics.Id, "Apple HomePod Mini", 2490000, 1800000, 65, "ELEC022", "Loa thông minh tích hợp Siri.")
                 });
 
-                // --- THỜI TRANG (Medium Value) ---
+                // --- THỜI TRANG (Medium Value) - 22 sản phẩm ---
                 products.AddRange(new[] {
                     CreateProduct(fashion.Id, "Nike Air Force 1", 2690000, 2000000, 100, "FASH001", "Giày sneaker trắng huyền thoại."),
                     CreateProduct(fashion.Id, "Adidas Ultraboost Light", 3990000, 3000000, 80, "FASH002", "Giày chạy bộ êm ái nhất."),
                     CreateProduct(fashion.Id, "Levis 501 Original Jeans", 1790000, 1200000, 120, "FASH003", "Quần jean ống đứng cổ điển."),
                     CreateProduct(fashion.Id, "Uniqlo Áo Khoác Phao", 1290000, 900000, 200, "FASH004", "Áo khoác siêu nhẹ giữ ấm."),
                     CreateProduct(fashion.Id, "Ray-Ban Aviator", 3990000, 3000000, 50, "FASH005", "Kính mát phi công chống tia UV."),
-                    CreateProduct(fashion.Id, "Zara Blazer Nam", 2490000, 1800000, 40, "FASH006", "Áo vest thời trang công sở.")
+                    CreateProduct(fashion.Id, "Zara Blazer Nam", 2490000, 1800000, 40, "FASH006", "Áo vest thời trang công sở."),
+                    // Thêm 16 sản phẩm thời trang mới
+                    CreateProduct(fashion.Id, "Converse Chuck Taylor", 1590000, 1100000, 90, "FASH007", "Giày canvas cổ điển mọi thời đại."),
+                    CreateProduct(fashion.Id, "H&M Áo Polo Cơ Bản", 399000, 250000, 250, "FASH008", "Áo polo cotton thoáng mát."),
+                    CreateProduct(fashion.Id, "Gucci Belt Logo", 12990000, 10000000, 15, "FASH009", "Thắt lưng da cao cấp logo GG."),
+                    CreateProduct(fashion.Id, "Tommy Hilfiger Jacket", 4990000, 3800000, 45, "FASH010", "Áo khoác bomber phong cách Mỹ."),
+                    CreateProduct(fashion.Id, "Puma RS-X Sneakers", 2890000, 2200000, 60, "FASH011", "Giày thể thao chunky retro."),
+                    CreateProduct(fashion.Id, "Calvin Klein Underwear 3-Pack", 890000, 600000, 180, "FASH012", "Bộ 3 quần lót cotton cao cấp."),
+                    CreateProduct(fashion.Id, "Fossil Smartwatch Gen 6", 6990000, 5500000, 35, "FASH013", "Đồng hồ thông minh thời trang."),
+                    CreateProduct(fashion.Id, "Michael Kors Túi Xách", 8990000, 7000000, 25, "FASH014", "Túi xách da thời trang nữ."),
+                    CreateProduct(fashion.Id, "New Balance 574", 2390000, 1800000, 75, "FASH015", "Giày sneaker lifestyle cổ điển."),
+                    CreateProduct(fashion.Id, "Polo Ralph Lauren Shirt", 2790000, 2100000, 55, "FASH016", "Áo sơ mi Oxford nam."),
+                    CreateProduct(fashion.Id, "Vans Old Skool", 1690000, 1200000, 95, "FASH017", "Giày skate board huyền thoại."),
+                    CreateProduct(fashion.Id, "GAP Hoodie Classic", 1490000, 1000000, 110, "FASH018", "Áo hoodie nỉ thoải mái."),
+                    CreateProduct(fashion.Id, "Lacoste Polo Classic", 2990000, 2200000, 65, "FASH019", "Áo polo logo cá sấu."),
+                    CreateProduct(fashion.Id, "Casio G-Shock GA-2100", 3290000, 2500000, 48, "FASH020", "Đồng hồ thể thao chống sốc."),
+                    CreateProduct(fashion.Id, "North Face Puffer Jacket", 5990000, 4500000, 30, "FASH021", "Áo phao lông vũ chống lạnh."),
+                    CreateProduct(fashion.Id, "Timberland 6 Inch Boot", 4590000, 3500000, 42, "FASH022", "Giày boot da cao cổ cổ điển.")
                 });
 
-                // --- SÁCH (Low Value, High Volume) ---
+                // --- SÁCH & VĂN PHÒNG PHẨM (Low Value, High Volume) - 22 sản phẩm ---
                 products.AddRange(new[] {
                     CreateProduct(books.Id, "Clean Code", 549000, 400000, 50, "BOOK001", "Sách gối đầu giường cho mọi lập trình viên."),
                     CreateProduct(books.Id, "Design Patterns (GoF)", 689000, 500000, 40, "BOOK002", "Các mẫu thiết kế phần mềm kinh điển."),
                     CreateProduct(books.Id, "The Pragmatic Programmer", 599000, 450000, 45, "BOOK003", "Hành trình từ thợ code thành nghệ nhân."),
                     CreateProduct(books.Id, "Sổ tay Moleskine", 450000, 300000, 200, "STAT001", "Sổ tay bìa cứng cao cấp."),
-                    CreateProduct(books.Id, "Bút Lamy Safari", 890000, 600000, 100, "STAT002", "Bút máy thiết kế công thái học.")
+                    CreateProduct(books.Id, "Bút Lamy Safari", 890000, 600000, 100, "STAT002", "Bút máy thiết kế công thái học."),
+                    // Thêm 17 sản phẩm sách & văn phòng phẩm mới
+                    CreateProduct(books.Id, "Refactoring (Martin Fowler)", 649000, 480000, 38, "BOOK004", "Cải thiện thiết kế code hiện có."),
+                    CreateProduct(books.Id, "Head First Design Patterns", 789000, 600000, 42, "BOOK005", "Học design patterns dễ hiểu."),
+                    CreateProduct(books.Id, "Đắc Nhân Tâm", 108000, 70000, 300, "BOOK006", "Sách self-help bán chạy nhất."),
+                    CreateProduct(books.Id, "Nhà Giả Kim", 79000, 50000, 280, "BOOK007", "Tiểu thuyết Paulo Coelho nổi tiếng."),
+                    CreateProduct(books.Id, "Atomic Habits", 189000, 130000, 150, "BOOK008", "Thay đổi thói quen nhỏ, kết quả lớn."),
+                    CreateProduct(books.Id, "Thinking Fast and Slow", 299000, 200000, 85, "BOOK009", "Tâm lý học về ra quyết định."),
+                    CreateProduct(books.Id, "Rich Dad Poor Dad", 159000, 100000, 175, "BOOK010", "Tài chính cá nhân cơ bản."),
+                    CreateProduct(books.Id, "System Design Interview", 890000, 700000, 28, "BOOK011", "Chuẩn bị phỏng vấn kỹ thuật."),
+                    CreateProduct(books.Id, "Cracking Coding Interview", 950000, 750000, 32, "BOOK012", "189 câu hỏi phỏng vấn lập trình."),
+                    CreateProduct(books.Id, "Bút Parker Jotter", 590000, 400000, 120, "STAT003", "Bút bi kim loại cao cấp."),
+                    CreateProduct(books.Id, "Bút chì Staedtler 2B", 45000, 25000, 500, "STAT004", "Bút chì vẽ kỹ thuật Đức."),
+                    CreateProduct(books.Id, "Sổ tay Leuchtturm1917", 520000, 380000, 90, "STAT005", "Sổ bullet journal chất lượng."),
+                    CreateProduct(books.Id, "Mực Pilot Iroshizuku", 450000, 320000, 75, "STAT006", "Mực bút máy Nhật cao cấp."),
+                    CreateProduct(books.Id, "Thước kẻ Faber-Castell", 35000, 20000, 400, "STAT007", "Thước nhựa trong suốt 30cm."),
+                    CreateProduct(books.Id, "Gôm Pentel Hi-Polymer", 25000, 15000, 600, "STAT008", "Gôm mềm không để lại vết."),
+                    CreateProduct(books.Id, "Bìa sổ còng A4", 89000, 55000, 250, "STAT009", "Bìa còng đựng tài liệu."),
+                    CreateProduct(books.Id, "Bút highlight Stabilo", 65000, 40000, 350, "STAT010", "Bộ 6 màu đánh dấu nổi bật.")
                 });
 
                 context.Products.AddRange(products);
