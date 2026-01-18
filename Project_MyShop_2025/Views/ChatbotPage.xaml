@@ -51,6 +51,12 @@
 
                 <!-- Right: Actions -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="RefreshDataButton" Click="RefreshData_Click"
+                            Background="Transparent" BorderThickness="0" 
+                            Padding="10" CornerRadius="8"
+                            ToolTipService.ToolTip="Refresh shop data">
+                        <FontIcon Glyph="&#xE72C;" FontSize="16" Foreground="#64748B"/>
+                    </Button>
                     <Button x:Name="ClearChatButton" Click="ClearChat_Click"
                             Background="Transparent" BorderThickness="0" 
                             Padding="10" CornerRadius="8"
@@ -102,26 +108,26 @@
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         
-                        <TextBlock Text="Hello! I'm your AI Assistant" FontSize="20" FontWeight="SemiBold" 
+                        <TextBlock Text="Xin chào! Tôi là AI Assistant của MyShop" FontSize="20" FontWeight="SemiBold" 
                                    Foreground="#0F172A" HorizontalAlignment="Center"/>
-                        <TextBlock Text="I can help you with your shop management tasks. Ask me about products, orders, reports, or anything else!" 
+                        <TextBlock Text="Tôi có thể truy cập dữ liệu cửa hàng của bạn và giúp bạn phân tích kinh doanh, theo dõi sản phẩm, đơn hàng và nhiều hơn nữa!" 
                                    FontSize="14" Foreground="#64748B" TextAlignment="Center" TextWrapping="Wrap"/>
                         
                         <!-- Quick Actions -->
-                        <TextBlock Text="Try asking:" FontSize="12" Foreground="#94A3B8" 
+                        <TextBlock Text="Thử hỏi tôi:" FontSize="12" Foreground="#94A3B8" 
                                    Margin="0,8,0,0" HorizontalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                            <Button Click="QuickPrompt_Click" Tag="What are my top selling products?"
+                            <Button Click="QuickPrompt_Click" Tag="Doanh thu hôm nay là bao nhiêu?"
                                     Background="#F1F5F9" BorderThickness="0" CornerRadius="16" Padding="12,8">
-                                <TextBlock Text="📦 Top products" FontSize="12" Foreground="#475569"/>
+                                <TextBlock Text="💰 Doanh thu" FontSize="12" Foreground="#475569"/>
                             </Button>
-                            <Button Click="QuickPrompt_Click" Tag="How can I improve my sales?"
+                            <Button Click="QuickPrompt_Click" Tag="Sản phẩm nào bán chạy nhất?"
                                     Background="#F1F5F9" BorderThickness="0" CornerRadius="16" Padding="12,8">
-                                <TextBlock Text="📈 Improve sales" FontSize="12" Foreground="#475569"/>
+                                <TextBlock Text="🏆 Top sản phẩm" FontSize="12" Foreground="#475569"/>
                             </Button>
-                            <Button Click="QuickPrompt_Click" Tag="Give me a daily report summary"
+                            <Button Click="QuickPrompt_Click" Tag="Cho tôi xem tổng quan cửa hàng"
                                     Background="#F1F5F9" BorderThickness="0" CornerRadius="16" Padding="12,8">
-                                <TextBlock Text="📊 Daily report" FontSize="12" Foreground="#475569"/>
+                                <TextBlock Text="📊 Tổng quan" FontSize="12" Foreground="#475569"/>
                             </Button>
                         </StackPanel>
                     </StackPanel>
