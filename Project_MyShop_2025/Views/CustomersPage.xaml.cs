@@ -64,7 +64,7 @@ namespace Project_MyShop_2025.Views
 
         private async Task LoadCustomersAsync()
         {
-            if (_customerService == null) return;
+            if (_customerService == null || CustomersListView == null) return;
 
             try
             {
@@ -77,7 +77,7 @@ namespace Project_MyShop_2025.Views
                     PageSize = _pageSize == -1 ? int.MaxValue : _pageSize
                 };
 
-                ùnvar result = await _customerService.GetCustomersAsync(criteria);
+                var result = await _customerService.GetCustomersAsync(criteria);
                 
                 var displayModels = new List<CustomerDisplayModel>();
                 foreach (var customer in result.Items)
