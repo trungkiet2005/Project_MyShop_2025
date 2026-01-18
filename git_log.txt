@@ -1,0 +1,40 @@
+﻿4f2ce9c feat: add product images for 47 new products
+77cdd6f feat: add 47 products to reach 22 per category (66 total) and create installer package
+be3f62b fix: Prevent NRE when UI controls are not yet ready
+773f199 fix: Resolve NullReferenceException in PageSize selection
+8c6cc10 fix: Resolve NullReferenceException in CustomersPage startup
+1a87ea9 docs: Add demo script, deployment guide, and future improvements
+c854669 docs: Add comprehensive documentation for Viva prep (Architecture, QA, Features)
+9f6cc34 test: add Unit Tests for ProductService
+844ea19 feat: implement Auto Save draft for Products and Orders
+1fe7f03 feat: implement Backup and Restore Database
+bd2b1fd feat: implement Print Order to PDF/XPS
+e9332cd feat: add advanced search for OrdersPage
+038a9e8 feat: add advanced search for ProductsPage
+db39fe6 docs: add MVVM architecture documentation
+dddd0f0 feat: add MVVM ViewModels with CommunityToolkit.Mvvm
+316d936 feat: add Customer and Promotion management pages
+790f0eb feat: add Customer and Promotion models with services
+6ba53fe feat: add service layer with dependency injection
+00b1192 refactor: settings UI and enhance navigation logic
+6a8bdcf feat: Add AI Assistant feature with Gemini API integration
+dcc8340 update: Revamp ReportsPage UI and enhance data visualization
+f1c18c2 refactor: UI/UX for Orders and Products Pages
+e1dfae2 update: Enhance dashboard UI and add global search functionality
+66e5a1e update: url product image and fix now date in report
+0d9dd2f update: Improve chart rendering and error handling in ReportsPage
+8a8e44f feat: Refactor and enhance DbSeeder for robust order seeding
+ca931a8 feat: Refactor seeding and database path management
+76bf27f fix: use Uri.EscapeDataString and add Internet capability
+a18f117 feat: expand orders data for reports
+0ed799c feat: add real product images from API
+cfde7db fix: escape ampersand in XAML text
+2aad10f fix: async chart redraw on resize
+8ab04da feat: add Reports navigation
+727685a feat: add ReportsPage chart logic
+6f20f24 feat: add ReportsPage XAML layout
+105e744 update: ShellPage.xaml.cs to navigate OrdersPage
+8f3e5fd feat: Creat OrdersPage.xaml with full UI
+6ce1627 migrate: status field into orders
+f00d0c6 add: OrderStatus enum in to model
+8624fdf feat(products): support adding new products and product categories
