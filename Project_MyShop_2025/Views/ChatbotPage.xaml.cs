@@ -361,7 +361,7 @@ namespace Project_MyShop_2025.Views
                     temperature = 0.7,
                     topK = 40,
                     topP = 0.95,
-                    maxOutputTokens = 1024
+                    maxOutputTokens = 4096
                 }
             };
 
@@ -407,7 +407,9 @@ namespace Project_MyShop_2025.Views
 3. Sử dụng emoji phù hợp để tăng tính trực quan
 4. Luôn trả lời bằng tiếng Việt
 5. Nếu không có dữ liệu, hãy nói rõ và đưa ra gợi ý chung
-6. Định dạng số tiền: xxx,xxx VNĐ";
+6. Định dạng số tiền: xxx,xxx VNĐ
+7. KHÔNG sử dụng markdown (**, ##, *). Chỉ dùng text thuần và emoji
+8. Dùng bullet points với emoji hoặc dấu - thay vì * để liệt kê";
 
             // Append real shop data
             if (!string.IsNullOrEmpty(_shopDataContext))
@@ -426,7 +428,7 @@ namespace Project_MyShop_2025.Views
             {
                 CornerRadius = new CornerRadius(16, 16, isUser ? 4 : 16, isUser ? 16 : 4),
                 Padding = new Thickness(16, 12, 16, 12),
-                MaxWidth = 600,
+                MaxWidth = 700,
                 HorizontalAlignment = isUser ? HorizontalAlignment.Right : HorizontalAlignment.Left
             };
 
@@ -456,11 +458,15 @@ namespace Project_MyShop_2025.Views
                 messageBorder.BorderThickness = new Thickness(1);
             }
 
+            // Format message - remove markdown syntax for AI responses
+            var displayMessage = isUser ? message : FormatMarkdown(message);
+
             var messageText = new TextBlock
             {
-                Text = message,
+                Text = displayMessage,
                 TextWrapping = TextWrapping.Wrap,
                 FontSize = 14,
+                LineHeight = 22,
                 Foreground = new SolidColorBrush(isUser ? Microsoft.UI.Colors.White : 
                     (isError ? GetColorFromHex("#DC2626") : GetColorFromHex("#0F172A")))
             };
@@ -472,6 +478,39 @@ namespace Project_MyShop_2025.Views
             // Scroll to bottom
             ChatScrollViewer.UpdateLayout();
             ChatScrollViewer.ChangeView(null, ChatScrollViewer.ScrollableHeight, null);
+        }
+
+        /// <summary>
+        /// Converts markdown syntax to plain text with proper formatting
+        /// </summary>
+        private string FormatMarkdown(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            // Remove markdown headers (### Header -> Header)
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"^#{1,6}\s*", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+            
+            // Remove bold markers (**text** or __text__ -> text)
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"\*\*(.+?)\*\*", "$1");
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"__(.+?)__", "$1");
+            
+            // Remove italic markers (*text* or _text_ -> text), but not bullet points
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"(?<!^)\*([^*\n]+)\*(?!\*)", "$1", System.Text.RegularExpressions.RegexOptions.Multiline);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"(?<!_)_([^_\n]+)_(?!_)", "$1");
+            
+            // Convert markdown bullet points (* item) to proper bullets (• item)
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"^\s*\*\s+", "• ", System.Text.RegularExpressions.RegexOptions.Multiline);
+            
+            // Remove inline code backticks (`code` -> code)
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"`([^`]+)`", "$1");
+            
+            // Remove code blocks
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"```[\s\S]*?```", "");
+            
+            // Clean up extra whitespace
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"\n{3,}", "\n\n");
+            
+            return text.Trim();
         }
 
         private void ClearChat_Click(object sender, RoutedEventArgs e)
