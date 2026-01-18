@@ -64,6 +64,8 @@ namespace Project_MyShop_2025.Views
 
         private async Task LoadCustomersAsync()
         {
+            if (_customerService == null) return;
+
             try
             {
                 var criteria = new CustomerSearchCriteria
