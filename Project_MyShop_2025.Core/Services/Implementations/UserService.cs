@@ -24,7 +24,7 @@ namespace Project_MyShop_2025.Core.Services.Implementations
             if (user == null)
                 return null;
 
-            if (!PasswordHelper.VerifyPassword(password, user.Password))
+            if (!PasswordHelper.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 return null;
 
             return user;
@@ -43,12 +43,13 @@ namespace Project_MyShop_2025.Core.Services.Implementations
 
         public async Task<User> CreateUserAsync(string username, string password, string? fullName = null, string? email = null, string role = "User")
         {
-            var hashedPassword = PasswordHelper.HashPassword(password);
+            PasswordHelper.CreatePasswordHash(password, out string passwordHash, out string passwordSalt);
             
             var user = new User
             {
                 Username = username,
-                Password = hashedPassword,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
                 FullName = fullName,
                 Email = email,
                 Role = role
@@ -65,10 +66,12 @@ namespace Project_MyShop_2025.Core.Services.Implementations
             if (user == null)
                 return false;
 
-            if (!PasswordHelper.VerifyPassword(currentPassword, user.Password))
+            if (!PasswordHelper.VerifyPasswordHash(currentPassword, user.PasswordHash, user.PasswordSalt))
                 return false;
 
-            user.Password = PasswordHelper.HashPassword(newPassword);
+            PasswordHelper.CreatePasswordHash(newPassword, out string newHash, out string newSalt);
+            user.PasswordHash = newHash;
+            user.PasswordSalt = newSalt;
             await _context.SaveChangesAsync();
             return true;
         }
