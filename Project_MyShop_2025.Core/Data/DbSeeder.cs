@@ -210,6 +210,16 @@ namespace Project_MyShop_2025.Core.Data
             System.Diagnostics.Debug.WriteLine($"Existing orders with items: {existingOrdersWithItems}, Force seed: {shouldForceSeed}");
             
             SeedOrders(context, force: shouldForceSeed);
+            
+            // 5. TẠO PROMOTIONS (KHUYẾN MÃI)
+            SeedPromotions(context);
+            
+            // 6. TẠO USERS (NGƯỜI DÙNG)
+            SeedUsers(context);
+            
+            // 7. TẠO CUSTOMERS (KHÁCH HÀNG)
+            SeedCustomers(context);
+            
             System.Diagnostics.Debug.WriteLine("Seed completed successfully");
             }
             catch (Exception ex)
@@ -725,8 +735,204 @@ namespace Project_MyShop_2025.Core.Data
                 new CustomerInfo { Name = "Lê Hoàng Cường", Phone = "0912345678", Address = "100 Điện Biên Phủ, Bình Thạnh, TP.HCM" },
                 new CustomerInfo { Name = "Phạm Minh Duy", Phone = "0987654321", Address = "Tòa nhà Bitexco, Q.1, TP.HCM" },
                 new CustomerInfo { Name = "Đặng Thu Thảo", Phone = "0933444555", Address = "Khu đô thị Sala, Q.2, TP.HCM" },
-                new CustomerInfo { Name = "Vũ Quang Huy", Phone = "0977888999", Address = "Landmark 81, Bình Thạnh, TP.HCM" }
+                new CustomerInfo { Name = "Vũ Quang Huy", Phone = "0977888999", Address = "Landmark 81, Bình Thạnh, TP.HCM" },
+                new CustomerInfo { Name = "Hoàng Thị Mai", Phone = "0911222333", Address = "15 Lê Duẩn, Q.1, TP.HCM" },
+                new CustomerInfo { Name = "Ngô Văn Hùng", Phone = "0922333444", Address = "88 Hai Bà Trưng, Q.3, TP.HCM" },
+                new CustomerInfo { Name = "Bùi Thị Lan", Phone = "0933444555", Address = "20 Cộng Hòa, Tân Bình, TP.HCM" },
+                new CustomerInfo { Name = "Đỗ Minh Tuấn", Phone = "0944555666", Address = "5 Nguyễn Trãi, Q.5, TP.HCM" },
+                new CustomerInfo { Name = "Lý Thị Hà", Phone = "0955666777", Address = "12 Hoàng Diệu, Q.4, TP.HCM" },
+                new CustomerInfo { Name = "Trương Văn Long", Phone = "0966777888", Address = "7 Trần Hưng Đạo, Q.1, TP.HCM" },
+                new CustomerInfo { Name = "Đinh Thị Ngọc", Phone = "0977888999", Address = "30 Phạm Văn Đồng, Gò Vấp, TP.HCM" },
+                new CustomerInfo { Name = "Võ Văn Nam", Phone = "0988999000", Address = "9 Xô Viết Nghệ Tĩnh, Bình Thạnh, TP.HCM" },
+                new CustomerInfo { Name = "Dương Thị Tuyết", Phone = "0999000111", Address = "50 Nguyễn Thị Minh Khai, Q.1, TP.HCM" },
+                new CustomerInfo { Name = "Hồ Văn Kiệt", Phone = "0901112223", Address = "100 Lý Thường Kiệt, Q.10, TP.HCM" },
+                new CustomerInfo { Name = "Cao Thị Hương", Phone = "0912223334", Address = "25 Nguyễn Văn Cừ, Q.5, TP.HCM" },
+                new CustomerInfo { Name = "Phan Văn Đức", Phone = "0923334445", Address = "60 Trường Chinh, Tân Bình, TP.HCM" },
+                new CustomerInfo { Name = "Trịnh Thị Hoa", Phone = "0934445556", Address = "80 Cách Mạng Tháng 8, Q.3, TP.HCM" },
+                new CustomerInfo { Name = "Lâm Văn Phúc", Phone = "0945556667", Address = "40 Võ Văn Tần, Q.3, TP.HCM" }
             };
+        }
+
+        public static void SeedPromotions(ShopDbContext context)
+        {
+            if (context.Promotions.Any()) return;
+
+            var promotions = new List<Promotion>
+            {
+                new Promotion
+                {
+                    Name = "Siêu Sale Mùa Hè",
+                    Code = "SUMMER2025",
+                    Description = "Giảm giá 10% cho tất cả đơn hàng chào hè.",
+                    Type = PromotionType.Percentage,
+                    DiscountValue = 10,
+                    StartDate = DateTime.Now.AddDays(-10),
+                    EndDate = DateTime.Now.AddDays(30),
+                    IsActive = true,
+                    UsageLimit = 1000
+                },
+                new Promotion
+                {
+                    Name = "Khách Hàng Mới",
+                    Code = "WELCOME",
+                    Description = "Giảm 50k cho đơn hàng đầu tiên.",
+                    Type = PromotionType.FixedAmount,
+                    DiscountValue = 50000,
+                    StartDate = DateTime.Now.AddMonths(-1),
+                    EndDate = DateTime.Now.AddMonths(5),
+                    IsActive = true,
+                    MinOrderAmount = 200000
+                },
+                new Promotion
+                {
+                    Name = "VIP Discount",
+                    Code = "VIPMEMBER",
+                    Description = "Giảm 15% tối đa 500k cho thành viên VIP.",
+                    Type = PromotionType.Percentage,
+                    DiscountValue = 15,
+                    MaxDiscountAmount = 500000,
+                    StartDate = DateTime.Now.AddYears(-1),
+                    EndDate = DateTime.Now.AddYears(1),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Name = "Flash Sale Điện Tử",
+                    Code = "TECHFLASH",
+                    Description = "Giảm 500k cho đơn hàng điện tử trên 5 triệu.",
+                    Type = PromotionType.FixedAmount,
+                    DiscountValue = 500000,
+                    MinOrderAmount = 5000000,
+                    StartDate = DateTime.Now.AddDays(-2),
+                    EndDate = DateTime.Now.AddDays(5),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Name = "Back to School",
+                    Code = "SCHOOL2025",
+                    Description = "Giảm 20% cho sách và văn phòng phẩm.",
+                    Type = PromotionType.Percentage,
+                    DiscountValue = 20,
+                    StartDate = DateTime.Now,
+                    EndDate = DateTime.Now.AddMonths(2),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Name = "Black Friday Sớm",
+                    Code = "BF2025EARLY",
+                    Description = "Giảm giá sốc 30% cho một số mặt hàng thời trang.",
+                    Type = PromotionType.Percentage,
+                    DiscountValue = 30,
+                    StartDate = DateTime.Now.AddDays(10), // Chưa diễn ra
+                    EndDate = DateTime.Now.AddDays(15),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Name = "Hết Hạn - Tết 2024",
+                    Code = "TET2024",
+                    Description = "Khuyến mãi Tết Nguyên Đán đã kết thúc.",
+                    Type = PromotionType.FixedAmount,
+                    DiscountValue = 100000,
+                    StartDate = DateTime.Now.AddMonths(-5),
+                    EndDate = DateTime.Now.AddMonths(-4),
+                    IsActive = false
+                },
+                new Promotion
+                {
+                    Name = "Mua 2 Tặng 1 (Sách)",
+                    Code = "BOOKDEAL",
+                    Description = "Mua 2 cuốn sách bất kỳ được tặng 1 cuốn (trị giá thấp nhất).",
+                    Type = PromotionType.BuyXGetY,
+                    DiscountValue = 2, // Mua 2
+                    FreeQuantity = 1,  // Tặng 1
+                    StartDate = DateTime.Now,
+                    EndDate = DateTime.Now.AddMonths(1),
+                    IsActive = true
+                }
+            };
+            
+            context.Promotions.AddRange(promotions);
+            context.SaveChanges();
+            System.Diagnostics.Debug.WriteLine($"Seeded {promotions.Count} promotions");
+        }
+
+        public static void SeedUsers(ShopDbContext context)
+        {
+            if (context.Users.Any()) return;
+
+            // Sử dụng PasswordHelper để hash mật khẩu (nếu có helpers)
+            // Hoặc tạo trực tiếp nếu Helper chưa sẵn sàng trong context seeding này
+            // Giả sử có class PasswordHelper static
+            
+            string adminSalt, adminHash;
+            Project_MyShop_2025.Core.Helpers.PasswordHelper.CreatePasswordHash("admin123", out adminHash, out adminSalt);
+
+            string staffSalt, staffHash;
+            Project_MyShop_2025.Core.Helpers.PasswordHelper.CreatePasswordHash("staff123", out staffHash, out staffSalt);
+
+            var users = new List<User>
+            {
+                new User
+                {
+                    Username = "admin",
+                    PasswordHash = adminHash,
+                    PasswordSalt = adminSalt,
+                    Email = "admin@myshop.com",
+                    Role = "Admin",
+                    FullName = "Administrator",
+                    Phone = "0909000111"
+                },
+                new User
+                {
+                    Username = "staff",
+                    PasswordHash = staffHash,
+                    PasswordSalt = staffSalt,
+                    Email = "staff@myshop.com",
+                    Role = "Staff",
+                    FullName = "Nhân Viên Bán Hàng",
+                    Phone = "0909000222"
+                }
+            };
+
+            context.Users.AddRange(users);
+            context.SaveChanges();
+            System.Diagnostics.Debug.WriteLine($"Seeded {users.Count} users");
+        }
+
+        public static void SeedCustomers(ShopDbContext context)
+        {
+            if (context.Customers.Any()) return;
+
+            var customers = new List<Customer>
+            {
+                new Customer { Name = "Nguyễn Văn An", Phone = "0901234567", Email = "an.nguyen@gmail.com", Address = "123 Nguyễn Huệ, Q.1, TP.HCM", LoyaltyPoints = 1500, CreatedAt = DateTime.Now.AddMonths(-6), IsActive = true },
+                new Customer { Name = "Trần Thị Bình", Phone = "0912345678", Email = "binh.tran@yahoo.com", Address = "456 Lê Lợi, Q.3, TP.HCM", LoyaltyPoints = 2300, CreatedAt = DateTime.Now.AddMonths(-8), IsActive = true },
+                new Customer { Name = "Lê Hoàng Cường", Phone = "0923456789", Email = "cuong.le@hotmail.com", Address = "789 Trần Hưng Đạo, Q.5, TP.HCM", LoyaltyPoints = 800, CreatedAt = DateTime.Now.AddMonths(-3), IsActive = true },
+                new Customer { Name = "Phạm Minh Đức", Phone = "0934567890", Email = "duc.pham@outlook.com", Address = "101 Võ Văn Tần, Q.3, TP.HCM", LoyaltyPoints = 3200, CreatedAt = DateTime.Now.AddMonths(-12), IsActive = true, Notes = "Khách hàng VIP" },
+                new Customer { Name = "Hoàng Thị Hương", Phone = "0945678901", Email = "huong.hoang@gmail.com", Address = "202 Cách Mạng Tháng 8, Q.10, TP.HCM", LoyaltyPoints = 500, CreatedAt = DateTime.Now.AddMonths(-2), IsActive = true },
+                new Customer { Name = "Vũ Quốc Khánh", Phone = "0956789012", Email = "khanh.vu@gmail.com", Address = "303 Lý Thường Kiệt, Q.Tân Bình, TP.HCM", LoyaltyPoints = 1200, CreatedAt = DateTime.Now.AddMonths(-5), IsActive = true },
+                new Customer { Name = "Đặng Thanh Lan", Phone = "0967890123", Email = "lan.dang@yahoo.com", Address = "404 Nguyễn Đình Chiểu, Q.Bình Thạnh, TP.HCM", LoyaltyPoints = 900, CreatedAt = DateTime.Now.AddMonths(-4), IsActive = true },
+                new Customer { Name = "Bùi Văn Minh", Phone = "0978901234", Email = "minh.bui@gmail.com", Address = "505 Điện Biên Phủ, Q.Bình Thạnh, TP.HCM", LoyaltyPoints = 2100, CreatedAt = DateTime.Now.AddMonths(-9), IsActive = true },
+                new Customer { Name = "Đỗ Thị Ngọc", Phone = "0989012345", Email = "ngoc.do@hotmail.com", Address = "606 Nguyễn Thị Minh Khai, Q.1, TP.HCM", LoyaltyPoints = 1800, CreatedAt = DateTime.Now.AddMonths(-7), IsActive = true },
+                new Customer { Name = "Ngô Quang Phú", Phone = "0990123456", Email = "phu.ngo@gmail.com", Address = "707 Hai Bà Trưng, Q.1, TP.HCM", LoyaltyPoints = 650, CreatedAt = DateTime.Now.AddMonths(-1), IsActive = true },
+                new Customer { Name = "Trịnh Văn Quân", Phone = "0901111222", Email = "quan.trinh@outlook.com", Address = "808 Phan Đình Phùng, Q.Phú Nhuận, TP.HCM", LoyaltyPoints = 2500, CreatedAt = DateTime.Now.AddMonths(-10), IsActive = true, Notes = "Mua số lượng lớn" },
+                new Customer { Name = "Lý Thu Sương", Phone = "0912222333", Email = "suong.ly@gmail.com", Address = "909 Cộng Hòa, Q.Tân Bình, TP.HCM", LoyaltyPoints = 750, CreatedAt = DateTime.Now.AddMonths(-3), IsActive = true },
+                new Customer { Name = "Mai Xuân Tâm", Phone = "0923333444", Email = "tam.mai@yahoo.com", Address = "1010 Sư Vạn Hạnh, Q.10, TP.HCM", LoyaltyPoints = 400, CreatedAt = DateTime.Now.AddDays(-45), IsActive = true },
+                new Customer { Name = "Phan Thị Uyên", Phone = "0934444555", Email = "uyen.phan@gmail.com", Address = "1111 Nguyễn Trãi, Q.5, TP.HCM", LoyaltyPoints = 1900, CreatedAt = DateTime.Now.AddMonths(-6), IsActive = true },
+                new Customer { Name = "Hồ Văn Vinh", Phone = "0945555666", Email = "vinh.ho@hotmail.com", Address = "1212 Lý Tự Trọng, Q.1, TP.HCM", LoyaltyPoints = 3000, CreatedAt = DateTime.Now.AddMonths(-11), IsActive = true, Notes = "Khách hàng thân thiết" },
+                new Customer { Name = "Đinh Thị Xuân", Phone = "0956666777", Email = "xuan.dinh@gmail.com", Address = "1313 Phan Văn Trị, Q.Gò Vấp, TP.HCM", LoyaltyPoints = 550, CreatedAt = DateTime.Now.AddMonths(-2), IsActive = true },
+                new Customer { Name = "Võ Công Yên", Phone = "0967777888", Email = "yen.vo@outlook.com", Address = "1414 Lê Văn Sỹ, Q.3, TP.HCM", LoyaltyPoints = 1100, CreatedAt = DateTime.Now.AddMonths(-4), IsActive = true },
+                new Customer { Name = "Nguyễn Bảo Zân", Phone = "0978888999", Email = "zan.nguyen@gmail.com", Address = "1515 Pasteur, Q.3, TP.HCM", LoyaltyPoints = 280, CreatedAt = DateTime.Now.AddDays(-20), IsActive = true },
+                new Customer { Name = "Trương Thị Ánh", Phone = "0989999000", Email = "anh.truong@yahoo.com", Address = "1616 Nguyễn Văn Cừ, Q.5, TP.HCM", LoyaltyPoints = 2000, CreatedAt = DateTime.Now.AddMonths(-8), IsActive = false, Notes = "Tài khoản tạm ngưng" },
+                new Customer { Name = "Lưu Minh Bách", Phone = "0900000111", Email = "bach.luu@gmail.com", Address = "1717 An Dương Vương, Q.5, TP.HCM", LoyaltyPoints = 1400, CreatedAt = DateTime.Now.AddMonths(-5), IsActive = true }
+            };
+
+            context.Customers.AddRange(customers);
+            context.SaveChanges();
+            System.Diagnostics.Debug.WriteLine($"Seeded {customers.Count} customers");
         }
 
         private class CustomerInfo
