@@ -639,6 +639,101 @@ namespace Project_MyShop_2025.Views
             return calendar.GetWeekOfYear(date, System.Globalization.CalendarWeekRule.FirstDay, culture.DateTimeFormat.FirstDayOfWeek);
         }
 
+        private async void ExportButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_fromDate.HasValue || !_toDate.HasValue)
+            {
+                await ShowMessageDialog("Error", "Please select a date range first.");
+                return;
+            }
+
+            try
+            {
+                var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+                savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+                savePicker.FileTypeChoices.Add("Excel Files", new List<string>() { ".xlsx" });
+                savePicker.SuggestedFileName = $"SalesReport_{_fromDate:yyyyMMdd}_{_toDate:yyyyMMdd}";
+
+                // Initialize with window handle
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle((Application.Current as App)?.Window);
+                WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
+
+                var file = await savePicker.PickSaveFileAsync();
+                if (file == null) return;
+
+                // Gather data
+                var orders = await _context.Orders
+                    .Include(o => o.Items)
+                        .ThenInclude(i => i.Product)
+                    .Where(o => o.CreatedAt.Date >= _fromDate.Value.Date && o.CreatedAt.Date <= _toDate.Value.Date)
+                    .ToListAsync();
+
+                // Prepare summary data
+                int totalRevenue = orders.Sum(o => o.TotalPrice);
+                int totalProfit = 0;
+                int totalProductsSold = 0;
+
+                foreach (var order in orders)
+                {
+                    foreach (var item in order.Items)
+                    {
+                        totalProductsSold += item.Quantity;
+                        int importCost = (item.Product?.ImportPrice ?? 0) * item.Quantity;
+                        totalProfit += item.TotalPrice - importCost;
+                    }
+                }
+
+                // Create export data structure
+                var summaryData = new List<object>
+                {
+                    new { Metric = "Report Period", Value = $"{_fromDate:dd/MM/yyyy} - {_toDate:dd/MM/yyyy}" },
+                    new { Metric = "Total Revenue", Value = $"{totalRevenue:N0}₫" },
+                    new { Metric = "Total Profit", Value = $"{totalProfit:N0}₫" },
+                    new { Metric = "Total Orders", Value = orders.Count.ToString() },
+                    new { Metric = "Total Products Sold", Value = totalProductsSold.ToString() },
+                    new { Metric = "Average Order Value", Value = $"{(orders.Count > 0 ? totalRevenue / orders.Count : 0):N0}₫" },
+                    new { Metric = "Profit Margin", Value = $"{(totalRevenue > 0 ? (double)totalProfit / totalRevenue * 100 : 0):F1}%" }
+                };
+
+                var ordersData = orders.Select(o => new
+                {
+                    OrderId = o.Id,
+                    Date = o.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    Status = o.Status.ToString(),
+                    ItemCount = o.Items.Count,
+                    TotalPrice = o.TotalPrice
+                }).ToList();
+
+                // Export using MiniExcel
+                var sheets = new Dictionary<string, object>
+                {
+                    ["Summary"] = summaryData,
+                    ["Orders"] = ordersData
+                };
+
+                await MiniExcelLibs.MiniExcel.SaveAsAsync(file.Path, sheets);
+
+                await ShowMessageDialog("Export Successful", $"Report exported to:\n{file.Path}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Export error: {ex.Message}");
+                await ShowMessageDialog("Export Error", ex.Message);
+            }
+        }
+
+        private async Task ShowMessageDialog(string title, string message)
+        {
+            var dialog = new ContentDialog
+            {
+                Title = title,
+                Content = message,
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
+            await dialog.ShowAsync();
+        }
+
         private static Windows.UI.Color GetColorFromHex(string hex)
         {
             hex = hex.Replace("#", "");
