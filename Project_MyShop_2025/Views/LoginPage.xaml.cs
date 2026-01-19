@@ -73,7 +73,7 @@ namespace Project_MyShop_2025.Views
                 // Retrieve user
                 var user = context.Users.FirstOrDefault(u => u.Username == username);
 
-                if (user != null && PasswordHelper.VerifyPassword(password, user.Password))
+                if (user != null && PasswordHelper.VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 {
                     // Login Success
                     if (RememberMeCheckBox.IsChecked == true)
@@ -82,6 +82,8 @@ namespace Project_MyShop_2025.Views
                         localSettings.Values["RememberMe_Username"] = username;
                     }
 
+                    // Pass username to ShellPage or Store in Session Service
+                    // For now, simple navigation
                     NavigateToMain();
                 }
                 else
@@ -143,8 +145,14 @@ namespace Project_MyShop_2025.Views
                             return;
                         }
 
-                        var hashedPassword = PasswordHelper.HashPassword(password);
-                        var user = new User { Username = username, Password = hashedPassword, Role = "User" };
+                        PasswordHelper.CreatePasswordHash(password, out string passwordHash, out string passwordSalt);
+                        var user = new User 
+                        { 
+                            Username = username, 
+                            PasswordHash = passwordHash, 
+                            PasswordSalt = passwordSalt,
+                            Role = "User" 
+                        };
                         context.Users.Add(user);
                         context.SaveChanges();
                     }
