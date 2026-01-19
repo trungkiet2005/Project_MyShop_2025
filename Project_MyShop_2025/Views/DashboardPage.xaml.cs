@@ -508,16 +508,18 @@ namespace Project_MyShop_2025.Views
                 };
                 ChartGridLines.Children.Add(line);
 
-                    // Y-axis label
+                // Y-axis label - calculate spacing to distribute evenly
                 var yValue = maxRevenue - (i * maxRevenue / 5);
+                double labelSpacing = (chartHeight - 40) / 5;
                 var yLabel = new TextBlock
                 {
                     Text = FormatNumber(yValue),
                     FontSize = 10,
                     Foreground = new SolidColorBrush(Color.FromArgb(255, 128, 128, 128)),
                     HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, -8, 8, 0)
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Height = labelSpacing,
+                    Margin = new Thickness(0, 0, 8, 0)
                 };
                 YAxisLabels.Children.Add(yLabel);
             }
