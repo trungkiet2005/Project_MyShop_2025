@@ -637,6 +637,57 @@ namespace Project_MyShop_2025.Views
             categoryCombo.DisplayMemberPath = "Name";
             if (categories.Any()) categoryCombo.SelectedIndex = 0;
 
+            // Image upload section
+            string? selectedImagePath = null;
+            var imagePreview = new Image { Height = 100, Width = 100, Stretch = Stretch.UniformToFill, Margin = new Thickness(0, 8, 0, 0) };
+            var imagePlaceholder = new Border 
+            { 
+                Height = 100, 
+                Width = 100, 
+                Background = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 241, 245, 249)),
+                CornerRadius = new CornerRadius(8),
+                Margin = new Thickness(0, 8, 0, 0)
+            };
+            imagePlaceholder.Child = new FontIcon { Glyph = "\uE722", FontSize = 32, Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 148, 163, 184)) };
+            
+            var selectImageButton = new Button { Content = "Select Image", Margin = new Thickness(0, 8, 0, 0) };
+            var imagePathText = new TextBlock { Text = "No image selected", FontSize = 11, Foreground = new SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 100, 116, 139)), Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 200 };
+            
+            var imagePanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 8, 0, 0) };
+            imagePanel.Children.Add(imagePlaceholder);
+            imagePanel.Children.Add(selectImageButton);
+            imagePanel.Children.Add(imagePathText);
+
+            selectImageButton.Click += async (s, e) =>
+            {
+                var picker = new Windows.Storage.Pickers.FileOpenPicker();
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle((Application.Current as App)?.Window);
+                WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+                
+                picker.FileTypeFilter.Add(".jpg");
+                picker.FileTypeFilter.Add(".jpeg");
+                picker.FileTypeFilter.Add(".png");
+                picker.FileTypeFilter.Add(".webp");
+                
+                var file = await picker.PickSingleFileAsync();
+                if (file != null)
+                {
+                    selectedImagePath = file.Path;
+                    imagePathText.Text = file.Name;
+                    
+                    // Show preview
+                    try
+                    {
+                        using var stream = await file.OpenReadAsync();
+                        var bitmap = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+                        await bitmap.SetSourceAsync(stream);
+                        imagePreview.Source = bitmap;
+                        imagePlaceholder.Child = imagePreview;
+                    }
+                    catch { }
+                }
+            };
+
             // Load Draft
             if (_autoSaveService != null)
             {
@@ -689,8 +740,12 @@ namespace Project_MyShop_2025.Views
             content.Children.Add(importPriceBox);
             content.Children.Add(qtyBox);
             content.Children.Add(descBox);
+            
+            // Add image section header and panel
+            content.Children.Add(new TextBlock { Text = "Product Image", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 12, 0, 0) });
+            content.Children.Add(imagePanel);
 
-            dialog.Content = new ScrollViewer { Content = content, MaxHeight = 500 };
+            dialog.Content = new ScrollViewer { Content = content, MaxHeight = 550 };
 
             var result = await dialog.ShowAsync();
 
@@ -704,7 +759,8 @@ namespace Project_MyShop_2025.Views
                     Price = int.TryParse(priceBox.Text, out int price) ? price : 0,
                     ImportPrice = int.TryParse(importPriceBox.Text, out int importPrice) ? importPrice : 0,
                     Quantity = int.TryParse(qtyBox.Text, out int qty) ? qty : 0,
-                    CategoryId = (categoryCombo.SelectedItem as Category)?.Id ?? 1
+                    CategoryId = (categoryCombo.SelectedItem as Category)?.Id ?? 1,
+                    Image = selectedImagePath // Store the image path
                 };
 
                 _context.Products.Add(product);
