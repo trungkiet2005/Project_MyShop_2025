@@ -83,81 +83,21 @@
                 <!-- Row 0: Search and Filters -->
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="350"/>
-                        <ColumnDefinition Width="24"/>
-                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*" MinWidth="200" MaxWidth="400"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="12"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="180"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Search Box -->
-                    <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="8" 
-                            BorderBrush="#E2E8F0" BorderThickness="1" Padding="0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="44"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <FontIcon Grid.Column="0" Glyph="&#xE721;" FontSize="16" 
-                                      Foreground="#94A3B8" HorizontalAlignment="Center"/>
-                            <TextBox x:Name="SearchBox" Grid.Column="1" 
-                                     PlaceholderText="Search by product name, SKU..." 
-                                     TextChanged="SearchBox_TextChanged" 
-                                     BorderThickness="0" Background="Transparent"
-                                     VerticalAlignment="Center" Padding="0,10"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- Category Dropdown -->
-                    <ComboBox x:Name="CategoryComboBox" Grid.Column="2" 
-                              PlaceholderText="All Categories" 
-                              SelectionChanged="CategoryComboBox_SelectionChanged"
-                              HorizontalAlignment="Stretch">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <!-- Price Filter Button with Flyout -->
-                    <Button Grid.Column="4" Background="#F8FAFC" BorderBrush="#E2E8F0" 
+                    <!-- More Filters Button (First) -->
+                    <Button x:Name="AdvancedFiltersButton" Grid.Column="0" 
+                            Background="#F8FAFC" BorderBrush="#E2E8F0" 
                             BorderThickness="1" CornerRadius="8" Padding="14,8" Height="40">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE7BF;" FontSize="14" Foreground="#64748B"/>
-                            <TextBlock Text="Price Range" FontSize="13" Foreground="#475569"/>
-                            <FontIcon Glyph="&#xE70D;" FontSize="10" Foreground="#94A3B8"/>
-                        </StackPanel>
-                        <Button.Flyout>
-                            <Flyout Placement="Bottom">
-                                <StackPanel Spacing="16" Width="240" Padding="4">
-                                    <TextBlock Text="Filter by Price" FontWeight="SemiBold" FontSize="14" Foreground="#0F172A"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="20"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="MinPriceBox" Grid.Column="0" 
-                                                 PlaceholderText="Min ₫" TextChanged="PriceFilter_Changed"/>
-                                        <TextBlock Grid.Column="1" Text="—" VerticalAlignment="Center" 
-                                                   HorizontalAlignment="Center" Foreground="#94A3B8"/>
-                                        <TextBox x:Name="MaxPriceBox" Grid.Column="2" 
-                                                 PlaceholderText="Max ₫" TextChanged="PriceFilter_Changed"/>
-                                    </Grid>
-                                    <Button Content="Apply Filter" HorizontalAlignment="Stretch" 
-                                            Background="#3B82F6" Foreground="White" CornerRadius="6"
-                                            Click="ApplyPriceFilter_Click"/>
-                                </StackPanel>
-                            </Flyout>
-                        </Button.Flyout>
-                    </Button>
-
-                    <!-- Advanced Filters Button with Stock Range -->
-                    <Button x:Name="AdvancedFiltersButton" Background="#F8FAFC" BorderBrush="#E2E8F0" 
-                            BorderThickness="1" CornerRadius="8" Padding="14,8" Height="40" Margin="12,0,0,0">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xE16E;" FontSize="14" Foreground="#64748B"/>
                             <TextBlock Text="More Filters" FontSize="13" Foreground="#475569"/>
@@ -218,8 +158,70 @@
                         </Button.Flyout>
                     </Button>
 
+                    <!-- Search Box -->
+                    <Border Grid.Column="2" Background="#F8FAFC" CornerRadius="8" 
+                            BorderBrush="#E2E8F0" BorderThickness="1" Padding="0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="44"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Grid.Column="0" Glyph="&#xE721;" FontSize="16" 
+                                      Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                            <TextBox x:Name="SearchBox" Grid.Column="1" 
+                                     PlaceholderText="Search by product name, SKU..." 
+                                     TextChanged="SearchBox_TextChanged" 
+                                     BorderThickness="0" Background="Transparent"
+                                     VerticalAlignment="Center" Padding="0,10"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Category Dropdown -->
+                    <ComboBox x:Name="CategoryComboBox" Grid.Column="4" Width="180"
+                              PlaceholderText="All Categories" 
+                              SelectionChanged="CategoryComboBox_SelectionChanged">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Price Filter Button with Flyout -->
+                    <Button Grid.Column="6" Background="#F8FAFC" BorderBrush="#E2E8F0" 
+                            BorderThickness="1" CornerRadius="8" Padding="14,8" Height="40">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE7BF;" FontSize="14" Foreground="#64748B"/>
+                            <TextBlock Text="Price Range" FontSize="13" Foreground="#475569"/>
+                            <FontIcon Glyph="&#xE70D;" FontSize="10" Foreground="#94A3B8"/>
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout Placement="Bottom">
+                                <StackPanel Spacing="16" Width="240" Padding="4">
+                                    <TextBlock Text="Filter by Price" FontWeight="SemiBold" FontSize="14" Foreground="#0F172A"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="20"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="MinPriceBox" Grid.Column="0" 
+                                                 PlaceholderText="Min ₫" TextChanged="PriceFilter_Changed"/>
+                                        <TextBlock Grid.Column="1" Text="—" VerticalAlignment="Center" 
+                                                   HorizontalAlignment="Center" Foreground="#94A3B8"/>
+                                        <TextBox x:Name="MaxPriceBox" Grid.Column="2" 
+                                                 PlaceholderText="Max ₫" TextChanged="PriceFilter_Changed"/>
+                                    </Grid>
+                                    <Button Content="Apply Filter" HorizontalAlignment="Stretch" 
+                                            Background="#3B82F6" Foreground="White" CornerRadius="6"
+                                            Click="ApplyPriceFilter_Click"/>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+
                     <!-- Sort Dropdown -->
-                    <ComboBox x:Name="SortComboBox" Grid.Column="6" 
+                    <ComboBox x:Name="SortComboBox" Grid.Column="8" 
                               SelectionChanged="SortComboBox_SelectionChanged" 
                               HorizontalAlignment="Stretch">
                         <ComboBoxItem Content="Sort: Name (A-Z)" Tag="NameAsc" IsSelected="True"/>
