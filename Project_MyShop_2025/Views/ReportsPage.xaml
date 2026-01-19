@@ -105,9 +105,10 @@
                     </ComboBox>
 
                     <!-- Export Button -->
-                    <Button Background="White" BorderBrush="#E2E8F0" BorderThickness="1" 
+                    <Button x:Name="ExportButton" Click="ExportButton_Click"
+                            Background="White" BorderBrush="#E2E8F0" BorderThickness="1" 
                             CornerRadius="8" Padding="14,8" Height="40"
-                            ToolTipService.ToolTip="Export report">
+                            ToolTipService.ToolTip="Export report to Excel">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon Glyph="&#xEDE1;" FontSize="14" Foreground="#64748B"/>
                             <TextBlock Text="Export" FontSize="13" Foreground="#475569"/>
