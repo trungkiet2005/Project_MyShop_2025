@@ -10,7 +10,42 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+            <!-- COLOR PALETTE (Using SolidColorBrush directly for WinUI 3 compatibility) -->
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#6200EA"/>
+            <SolidColorBrush x:Key="PrimaryLightBrush" Color="#B388FF"/>
+            <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#3700B3"/>
+            <SolidColorBrush x:Key="SecondaryBrush" Color="#03DAC6"/>
+            <SolidColorBrush x:Key="BackgroundBrush" Color="#F8F9FA"/>
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ErrorBrush" Color="#B00020"/>
+
+            <!-- STYLES -->
+            <!-- Modern Card Style -->
+            <Style x:Key="ModernCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="Padding" Value="20"/>
+                <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                <Setter Property="BorderThickness" Value="1"/>
+            </Style>
+
+            <!-- Modern Button Style -->
+            <Style x:Key="ModernButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Padding" Value="16,8"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="BorderThickness" Value="0"/>
+            </Style>
+             
+            <!-- Modern TextBox Style -->
+            <Style x:Key="ModernTextBoxStyle" TargetType="TextBox">
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="10,8"/>
+                <Setter Property="PlaceholderForeground" Value="#9E9E9E"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
