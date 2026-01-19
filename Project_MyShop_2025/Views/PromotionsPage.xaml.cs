@@ -177,8 +177,8 @@ namespace Project_MyShop_2025.Views
             
             var isActiveToggle = new ToggleSwitch { IsOn = promotion?.IsActive ?? true, Margin = new Thickness(0, 0, 0, 12) };
 
-            var content = new StackPanel { Width = 400, MaxHeight = 500 };
-            var scrollViewer = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            var content = new StackPanel { Width = 400 };
+            var scrollViewer = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, MaxHeight = 500 };
             
             content.Children.Add(new TextBlock { Text = "Promotion Code *", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 4) });
             content.Children.Add(codeBox);
