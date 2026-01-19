@@ -799,19 +799,14 @@ namespace Project_MyShop_2025.Views
             
             // Load products
             var products = await _context.Products.ToListAsync();
-            productsList.ItemsSource = products;
             
-            var xaml = @"<DataTemplate xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">
-                <Grid Padding=""8"">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width=""*"" />
-                        <ColumnDefinition Width=""Auto"" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text=""{Binding Name}"" FontWeight=""Medium"" />
-                    <TextBlock Grid.Column=""1"" Text=""{Binding Price, StringFormat='{}{0:N0}₫'}"" Foreground=""Gray"" Margin=""10,0,0,0""/>
-                </Grid>
-            </DataTemplate>";
-            productsList.ItemTemplate = (DataTemplate)XamlReader.Load(xaml);
+            // Create display items for product list (simpler approach without XamlReader)
+            var productDisplayItems = products.Select(p => new { 
+                Product = p, 
+                DisplayText = $"{p.Name} - ₫{p.Price:N0}" 
+            }).ToList();
+            productsList.ItemsSource = productDisplayItems;
+            productsList.DisplayMemberPath = "DisplayText";
 
             // Controls for adding
             var controlsPanel = new Grid();
@@ -847,10 +842,12 @@ namespace Project_MyShop_2025.Views
             {
                 if (productsList.SelectedItems != null && productsList.SelectedItems.Count > 0)
                 {
-                    foreach (Product selectedProduct in productsList.SelectedItems)
+                    foreach (var item in productsList.SelectedItems)
                     {
-                         // Check if already added? (Simple logic: allow duplicates or sum quantity?)
-                         // Let's create new line for simplicity
+                        // Extract Product from anonymous wrapper (use dynamic)
+                        dynamic wrapper = item;
+                        Product selectedProduct = wrapper.Product;
+                        
                         var qty = int.TryParse(quantityBox.Text, out int q) ? q : 1;
                         var price = int.TryParse(priceBox.Text, out int p) ? p : selectedProduct.Price;
                         
