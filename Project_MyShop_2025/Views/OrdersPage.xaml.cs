@@ -32,10 +32,10 @@ namespace Project_MyShop_2025.Views
         private DateTime? _toDate = null;
         private string _searchText = "";
         private string _sortBy = "DateDesc";
-        private IPrintService _printService;
-        private Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService _autoSaveService;
-        private ICustomerService _customerService;
-        private IPromotionService _promotionService;
+        private IPrintService? _printService;
+        private Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService? _autoSaveService;
+        private ICustomerService? _customerService;
+        private IPromotionService? _promotionService;
 
         public OrdersPage()
         {
@@ -1064,9 +1064,9 @@ namespace Project_MyShop_2025.Views
 
     public class OrderDraft
     {
-        public string CustomerName { get; set; }
-        public string CustomerPhone { get; set; }
-        public string CustomerAddress { get; set; }
+        public string? CustomerName { get; set; }
+        public string? CustomerPhone { get; set; }
+        public string? CustomerAddress { get; set; }
         public List<OrderItemDraft> Items { get; set; } = new();
     }
 

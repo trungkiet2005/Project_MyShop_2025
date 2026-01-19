@@ -9,7 +9,7 @@ namespace Project_MyShop_2025.Views
     public sealed partial class ConfigPage : Page
     {
         private readonly ApplicationDataContainer _localSettings;
-        private readonly Project_MyShop_2025.Core.Services.Interfaces.IDatabaseService _databaseService;
+        private readonly Project_MyShop_2025.Core.Services.Interfaces.IDatabaseService? _databaseService;
 
         public ConfigPage()
         {

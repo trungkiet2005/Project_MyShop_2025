@@ -24,7 +24,7 @@ namespace Project_MyShop_2025.Views
         private List<Product> _allProducts = new();
         private List<Product> _filteredProducts = new();
         private List<CategoryFilterItem> _categories = new();
-        private Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService _autoSaveService;
+        private Project_MyShop_2025.Core.Services.Interfaces.IAutoSaveService? _autoSaveService;
         
         private int _currentPage = 1;
         private int _pageSize = 40;
@@ -1042,12 +1042,12 @@ namespace Project_MyShop_2025.Views
 
     public class ProductDraft
     {
-        public string Name { get; set; }
-        public string SKU { get; set; }
-        public string Description { get; set; }
-        public string Price { get; set; }
-        public string ImportPrice { get; set; }
-        public string Quantity { get; set; }
+        public string? Name { get; set; }
+        public string? SKU { get; set; }
+        public string? Description { get; set; }
+        public string? Price { get; set; }
+        public string? ImportPrice { get; set; }
+        public string? Quantity { get; set; }
         public int CategoryIndex { get; set; }
     }
 }

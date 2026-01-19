@@ -12,11 +12,11 @@ namespace Project_MyShop_2025.Services
 {
     public class PrintService : IPrintService
     {
-        private PrintManager _printManager;
-        private PrintDocument _printDocument;
-        private IPrintDocumentSource _printDocumentSource;
-        private OrderInvoicePage _printablePage;
-        private Window _window;
+        private PrintManager? _printManager;
+        private PrintDocument? _printDocument;
+        private IPrintDocumentSource? _printDocumentSource;
+        private OrderInvoicePage? _printablePage;
+        private Window? _window;
         private nint _hWnd;
 
         public bool IsPrintingSupported => PrintManager.IsSupported();
