@@ -12,11 +12,16 @@ namespace Project_MyShop_2025.Core.Models
         public string Username { get; set; } = string.Empty;
 
         [Required]
-        public string Password { get; set; } = string.Empty; // Store Hashed Password
+        public string PasswordHash { get; set; } = string.Empty;
+
+        [Required]
+        public string PasswordSalt { get; set; } = string.Empty;
 
         public string? FullName { get; set; }
         
         public string? Email { get; set; }
+        
+        public string? Phone { get; set; }
         
         public string Role { get; set; } = "User"; // Admin, User
     }
